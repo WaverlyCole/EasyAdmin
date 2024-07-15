@@ -11,4 +11,4 @@ EasyAdmin is a lightweight, efficient, and user-friendly admin system for Roblox
 For detailed information on installation, configuration, and usage, please refer to the [EasyAdmin Documentation](https://waverlycole.gitbook.io/easyadmin-docs/)
 
 ## Acknowledgments
-EasyAdmin is heavily inspired by the SimpleAdmin system, originally created by [Crywink](https://github.com/crywink/SimpleAdmin). My goal was to create a more maintainable version of SimpleAdmin, overcoming the limitations posed by the use of getfenv() and setfenv().
+EasyAdmin is heavily inspired by the SimpleAdmin system, originally created by [Crywink](https://github.com/crywink/SimpleAdmin). My goal was to create a more maintainable and easy to use version of SimpleAdmin, and to overcome the limitations posed by the use of getfenv() and setfenv().
