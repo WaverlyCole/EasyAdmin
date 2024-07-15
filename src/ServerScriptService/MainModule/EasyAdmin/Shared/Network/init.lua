@@ -1,4 +1,4 @@
-local Network = {_remote = script:WaitForChild("Main"), _hooks = {}}
+local Network = {_hooks = {}}
 
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
@@ -9,6 +9,10 @@ local IsClient = RunService:IsClient()
 local Debug = false
 
 if IsServer then
+	Network._remote = Instance.new("RemoteFunction")
+	Network._remote.Name = "Main"
+	Network._remote.Parent = script
+
 	Network._remote.OnServerInvoke = function(Player, hookName, ...)
 		if Network._hooks[hookName] then
 			local results = {}
@@ -24,6 +28,8 @@ if IsServer then
 		end
 	end
 elseif IsClient then
+	Network._remote = script:WaitForChild("Main",math.huge)
+
 	Network._remote.OnClientInvoke = function(hookName, ...)
 		if Network._hooks[hookName] then
 			local results = {}
