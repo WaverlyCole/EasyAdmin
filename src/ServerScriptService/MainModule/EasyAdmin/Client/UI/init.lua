@@ -34,7 +34,7 @@ return function(Context)
 			end
 		end
 		
-		local new = script.Folder.ContentFrame:Clone()
+		local new = script.Assets.ContentFrame:Clone()
 		new.Name = Name
 		new.Top.Title.Text = `<b> {Name or " "} </b>`
 		
@@ -90,7 +90,7 @@ return function(Context)
 			return existingLabel
 		end
 		
-		local new = script.Folder.ContentFrameLabel:Clone()
+		local new = script.Assets.ContentFrameLabel:Clone()
 
 		new.Name = labelContent
 		new.MainText.Text = labelContent
@@ -143,7 +143,7 @@ return function(Context)
 	end
 	
 	Context.Comm:Hook("Confirmation",function(Data)
-		local newHint = script.Folder.Confirmation:Clone()
+		local newHint = script.Assets.Confirmation:Clone()
 		newHint.Main.Top.Title.Text = `Confirmation from <b>{Data.From or "System"}</b>`
 		newHint.Main.Content.Content.Text = Data.Text or ""
 		newHint.Size = UDim2.new(0,0,0,0)
@@ -209,7 +209,7 @@ return function(Context)
 	end)
 	
 	Context.Comm:Hook("Hint",function(Data)
-		local newHint = script.Folder.Hint:Clone()
+		local newHint = script.Assets.Hint:Clone()
 		newHint.Top.Title.Text = `Notification from <b>{Data.From or "System"}</b>`
 		newHint.Content.Content.Text = Data.Text or ""
 		newHint.Size = UDim2.new(0,0,0,0)
@@ -258,7 +258,7 @@ return function(Context)
 	end)
 	
 	Context.Comm:Hook("Message",function(Data)
-		local newHint = script.Folder.Message:Clone()
+		local newHint = script.Assets.Message:Clone()
 		newHint.Top.Title.Text = `Message from <b>{Data.From or "System"}</b>`
 		newHint.Content.Content.Text = Data.Text or ""
 		newHint.Size = UDim2.new(0,0,0,0)

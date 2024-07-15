@@ -13,7 +13,8 @@
 
 local Loader = {
 	DebugMode = true;
-	Asset = 00000;
+	DebugModule = script.Parent.Parent:FindFirstChild("MainModule"),
+	Asset = 18459734894;
 	Settings = require(script.Parent:WaitForChild("Settings")),
 	Packages = script.Parent.Packages
 }
@@ -21,8 +22,9 @@ local Loader = {
 if not _G.EasyAdminLoaded then
 	local Module
 	
-	if Loader.DebugMode and script:FindFirstChild("MainModule") then
-		Module = require(script:FindFirstChild("MainModule"))
+	if Loader.DebugMode and Loader.DebugModule then
+		warn("[EasyAdmin] Running in Debug mode!")
+		Module = require(Loader.DebugModule)
 	else
 		Module = require(Loader.Asset)
 	end
@@ -33,5 +35,5 @@ if not _G.EasyAdminLoaded then
 		warn(`[EasyAdmin]: Error loading`)
 	end
 else
-	warn(`EasyAdmin: Admin system already loaded.`)
+	warn(`[EasyAdmin]: Admin system already loaded.`)
 end
