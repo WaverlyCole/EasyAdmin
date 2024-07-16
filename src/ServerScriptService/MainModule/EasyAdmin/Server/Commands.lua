@@ -56,6 +56,8 @@ return function(Context)
 				end
 
 				characterModel.Name = username
+
+				Context.PlayerUtils:ScaleCharacter(characterModel,.4)
 			
 				local dollTool = Instance.new("Tool")
 				dollTool.Name = "Doll"
@@ -77,42 +79,6 @@ return function(Context)
 			
 				characterModel.Parent = dollTool
 
-				local hum = characterModel:FindFirstChildOfClass("Humanoid")
-
-				if hum.RigType == Enum.HumanoidRigType.R15 then
-					hum:WaitForChild("BodyHeightScale").Value /= 2.5
-					hum:WaitForChild("BodyDepthScale").Value /= 2.5
-					hum:WaitForChild("BodyWidthScale").Value /= 2.5
-				elseif hum.RigType == Enum.HumanoidRigType.R6 then
-					local motors = {}
-					table.insert(motors, characterModel.HumanoidRootPart:FindFirstChild("RootJoint"))
-
-					for _, motor in characterModel.Torso:GetChildren() do
-						if motor:IsA("Motor6D") then table.insert(motors, motor) end
-					end
-
-					for _, motor in motors do
-						motor.C0 = CFrame.new((motor.C0.Position * 0.4)) * (motor.C0 - motor.C0.Position)
-						motor.C1 = CFrame.new((motor.C1.Position * 0.4)) * (motor.C1 - motor.C1.Position)
-					end
-
-					for _, v in characterModel:GetDescendants() do
-						if v:IsA("BasePart") then
-							v.Size *= 0.3
-							v.Position = characterModel.Torso.Position
-						elseif v:IsA("Accessory") and v:FindFirstChild("Handle") then
-							v.handle.AccessoryWeld.C0 = CFrame.new((v.handle.AccessoryWeld.C0.Position * 0.3)) * (v.handle.AccessoryWeld.C0 - handle.AccessoryWeld.C0.Position)
-							v.handle.AccessoryWeld.C1 = CFrame.new((v.handle.AccessoryWeld.C1.Position * 0.3)) * (v.handle.AccessoryWeld.C1 - handle.AccessoryWeld.C1.Position)
-							local mesh = handle:FindFirstChildOfClass("SpecialMesh")
-							if mesh then
-								mesh.Scale *= 0.3
-							end
-						elseif v:IsA("SpecialMesh") and v.Parent.Name ~= "Handle" and v.Parent.Name ~= "Head" then
-							v.Scale *= 0.3
-						end
-					end
-				end
-
 				for _, descendant in pairs(characterModel:GetDescendants()) do
 					if descendant:IsA("Script") or descendant:IsA("LocalScript") then
 						descendant:Destroy()
@@ -125,6 +91,35 @@ return function(Context)
 				end
 
 				dollTool.Parent = runningPlr.Backpack
+			end;
+		},
+		{
+			Name = "charsize";
+			Aliases = {"playersize","size","scale"};
+			Rank = 0;
+			Category = "Character";
+			Tags = {"Fun"},
+			Args = {
+				{
+					Name = "Targets";
+					Display = "Player(s)";
+					Type = "players";
+				},
+				{
+					Name = "Size";
+					Display = "Size";
+					Type = "number";
+					Default = 1,
+				},
+			};
+			Run = function(runningPlr,Args)
+				for _,Plr in Args.Targets do
+					local Char = Plr.Character
+
+					if Char then
+						Context.PlayerUtils:ScaleCharacter(Char,Args.Size,true)
+					end
+				end
 			end;
 		},
 		{

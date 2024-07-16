@@ -12,6 +12,59 @@ function Utils:UserIdToName(UserId)
 	end
 end
 
+function Utils:ScaleCharacter(Char,scale,scaleProperties)
+	local Humanoid = Char:FindFirstChildOfClass("Humanoid")
+	local HRP = Char:FindFirstChild("HumanoidRootPart")
+
+	if Humanoid and HRP then
+		if Humanoid.RigType == Enum.HumanoidRigType.R15 then -- R15
+			if Humanoid:FindFirstChild("HeadScale") then
+				local HS = Humanoid.HeadScale
+				local BDS = Humanoid.BodyDepthScale
+				local BWS = Humanoid.BodyWidthScale
+				local BHS = Humanoid.BodyHeightScale
+
+				HS.Value = HS.Value * scale
+				BDS.Value = BDS.Value * scale
+				BWS.Value = BWS.Value * scale
+				BHS.Value = BHS.Value * scale
+			end
+		else -- R6
+			local halfHMRSize = (HRP.Size.Y / 2)
+			for _, i in pairs(Char:GetDescendants()) do
+				if i:IsA("BasePart") and i.Name ~= "HumanoidRootPart" then
+					local wasCanCollide = i.CanCollide
+					i.CanCollide = false
+					i.Size = i.Size * scale
+					i.CanCollide = wasCanCollide
+				elseif i:IsA("FileMesh") and (not i:IsA("SpecialMesh") or i.MeshType == Enum.MeshType.FileMesh) then
+					i.Scale = i.Scale * scale
+				elseif i:IsA("JointInstance") then
+					local wasAnchored = i.Part1.Anchored
+					i.Part1.Anchored = false
+					i.C0 = i.C0 - (i.C0.p * (1 - scale))
+					i.C1 = i.C1 - (i.C1.p * (1 - scale))
+					i.Part1.Anchored = wasAnchored
+				elseif i:IsA("Attachment") then
+					i.Position = i.Position * scale
+				elseif i:IsA("Pose") then
+					i.CFrame = i.CFrame - (i.CFrame.p * (1 - scale))
+				elseif i:IsA("Humanoid") then
+					i.HipHeight = (i.HipHeight + halfHMRSize) * scale - halfHMRSize
+				end
+			end
+		end
+
+		if scaleProperties then
+			Humanoid.WalkSpeed = Humanoid.WalkSpeed * scale
+			Humanoid.JumpPower = Humanoid.JumpPower * scale
+			Humanoid.JumpHeight = Humanoid.JumpHeight * scale
+		end
+	end
+
+	return Char
+end
+
 function Utils:Teleport(Player,newCF)
 	if typeof(newCF) == "Vector3" then
 		newCF = CFrame.new(newCF)
