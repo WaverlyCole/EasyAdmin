@@ -149,7 +149,7 @@ return function(Context)
 					local result = ""
 
 					for _,v in tbl do
-						result = result.." <".. (v.Display or v.Name or "None")..">"
+						result = result.." [".. (v.Display or v.Name or "None").."]"
 					end
 
 					return result
@@ -191,11 +191,11 @@ return function(Context)
 					return result
 				end
 				
-				for i,Command in Commands:Get() do -- Commands:Get() only returns enabled commands (vs Commands.Commands which is ALL commands)
+				for i,Command in Commands:Get() do
 					if not tbl[Command.Category] then
 						tbl[Command.Category] = {}
 					end
-					
+
 					table.insert(tbl[Command.Category],{Text = Context.Options.Prefix.. Command.Name .. stringifyArgs(Command.Args),Command = `cmdinfo {Command.Name}`})
 				end
 				
