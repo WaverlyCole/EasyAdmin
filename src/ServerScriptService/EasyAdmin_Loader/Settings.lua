@@ -19,8 +19,6 @@ return {
 		--["Username"] = 2,
 		--["UserId"] = 2,
 		--["GroupId:GroupRank"] = 2,
-		[13282741] = 4,
-		["2849639:250"] = 2,
 	},
 	
 	RankLookup = {
