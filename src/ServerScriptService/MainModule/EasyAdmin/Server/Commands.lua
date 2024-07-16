@@ -47,7 +47,7 @@ return function(Context)
 				local username = Context.PlayerUtils:UserIdToName(Args.UserId)
 				local armPart = runningChar:FindFirstChild("RightHand") or runningChar:FindFirstChild("Right Arm") or runningChar:FindFirstChild("Head")
 				local success, characterModel = pcall(function()
-					return game:GetService("Players"):CreateHumanoidModelFromUserId(Args.UserId)
+					return PlayersService:CreateHumanoidModelFromUserId(Args.UserId)
 				end)
 			
 				if not success then
@@ -191,7 +191,7 @@ return function(Context)
 					return result
 				end
 				
-				for i,Command in Commands.Commands do
+				for i,Command in Commands:Get() do -- Commands:Get() only returns enabled commands (vs Commands.Commands which is ALL commands)
 					if not tbl[Command.Category] then
 						tbl[Command.Category] = {}
 					end
@@ -212,7 +212,7 @@ return function(Context)
 				local function buildPlayersTable()
 					local tbl = {}
 
-					for i,Plr in game:GetService("Players"):GetPlayers() do
+					for i,Plr in PlayersService:GetPlayers() do
 						local plrInfo = {}
 
 						local loadedRank = Context.Ranks:Get(Plr)
@@ -235,11 +235,11 @@ return function(Context)
 
 				buildPlayersTable()
 				
-				local plrJoining = game:GetService("Players").PlayerAdded:Connect(function(Plr)
+				local plrJoining = PlayersService.PlayerAdded:Connect(function(Plr)
 					buildPlayersTable()
 					Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Plr.Name} joined the server.`,From = `Players`,Time = 10})
 				end)
-				local plrLeaving = game:GetService("Players").PlayerRemoving:Connect(function(Plr)
+				local plrLeaving = PlayersService.PlayerRemoving:Connect(function(Plr)
 					buildPlayersTable()
 					Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Plr.Name} left the server.`,From = `Players`,Time = 10})
 				end)
@@ -726,7 +726,7 @@ return function(Context)
 					
 					if response == true then
 						local succ,result = pcall(function()
-							return game:GetService("Players"):BanAsync(banConfig)
+							return PlayersService:BanAsync(banConfig)
 						end)
 
 						if succ then
@@ -788,7 +788,7 @@ return function(Context)
 			};
 			Run = function(runningPlr,Args)
 				local succ,result = pcall(function()
-					return game:GetService("Players"):GetBanHistoryAsync(Args.UserId)
+					return PlayersService:GetBanHistoryAsync(Args.UserId)
 				end)
 				
 				if succ then
@@ -856,7 +856,7 @@ return function(Context)
 				
 				if response == true then
 					local succ,result = pcall(function()
-						return game:GetService("Players"):UnbanAsync(unbanConfig)
+						return PlayersService:UnbanAsync(unbanConfig)
 					end)
 
 					if succ then
@@ -1404,7 +1404,7 @@ return function(Context)
 					end
 					
 					local succ,UserId = pcall(function()
-						return game:GetService("Players"):GetUserIdFromNameAsync(argString)
+						return PlayersService:GetUserIdFromNameAsync(argString)
 					end)
 					
 					if succ then
@@ -1478,6 +1478,8 @@ return function(Context)
 			local cmdArgs = {table.unpack(cmdSplit, 2)}
 
 			for _, Command in ipairs(self.Commands) do
+				if Command.Disabled then continue end -- Skip disabled commands
+
 				local runCommand = false
 
 				-- Search for command name/alias
@@ -1487,6 +1489,7 @@ return function(Context)
 					for _, Alias in ipairs(Command.Aliases) do
 						if cmdName:lower() == Alias:lower() then
 							runCommand = true
+							break
 						end
 					end
 				end
@@ -1515,6 +1518,41 @@ return function(Context)
 	
 	function Commands:registerCommand(newCommand)
 		table.insert(Commands.Commands,newCommand)
+
+		if self:hasTag(newCommand,"Fun") and Context.Options.DisableFunCommands == true then
+			newCommand.Disabled = true
+		end
+	end
+
+	function Commands:Get() -- Returns all enabled commands
+		local returnCommands = {}
+
+		for _,Command in Commands.Commands do
+			if Command.Disabled ~= true then
+				table.insert(returnCommands,Command)
+			end
+		end
+
+		return returnCommands
+	end
+
+	function Commands:disableTagged(Tag)
+		for _,Command in Commands.Commands do
+			if self:hasTag(Command,Tag) then
+				Command.Disabled = true
+			end
+		end
+	end
+
+	function Commands:hasTag(Command,Tag)
+		local commandTags = Command.Tags
+		if commandTags then
+			if table.find(commandTags,Tag) then
+				return true
+			end
+		else
+			return false
+		end
 	end
 	
 	function Commands:getCommand(commandName)
@@ -1533,5 +1571,12 @@ return function(Context)
 		return nil
 	end
 	
+	function Commands.Start()
+		-- Disable fun commands
+		if Context.Options.DisableFunCommands then
+			Commands:disableTagged("Fun")
+		end
+	end
+
 	return Commands
 end
