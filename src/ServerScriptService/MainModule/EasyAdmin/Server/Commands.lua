@@ -446,7 +446,8 @@ return function(Context)
 			Run = function(runningPlr,Args)
 				for _,Player in Args.Targets do
 					task.spawn(function()
-						local response = Context.Comm:Invoke(Player,"Confirmation",{From = runningPlr.Name,Text = Args.Message,Time = 15})
+						local msg = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Player.UserId)
+						local response = Context.Comm:Invoke(Player,"Confirmation",{From = runningPlr.Name,Text = msg,Time = 15})
 						
 						if response == true then
 							Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Player.Name}' confirmed!`,Time = 10})
@@ -635,11 +636,12 @@ return function(Context)
 				local theirRank = Context.Ranks:Get(Args.Target)
 				
 				if runningRank >= theirRank then
-					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Are you sure you want to kick "{Args.Target.Name}"?`,Time = 15})
+					local kickMsg = Context.Text:FilterFor(Args.Reason,runningPlr.UserId,Args.Target.UserId)
+					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Are you sure you want to kick "{Args.Target.Name}" for "{kickMsg}"?`,Time = 15})
 					
 					if response == true then
-						Args.Target:Kick(`Kicked by {runningPlr.Name} for "{Args.Reason}"`)
-						Context.Comm:SendTo(runningPlr,"Hint",{Text = `Kicked {Args.Target.Name} for "{Args.Reason}"`,Time = 10})
+						Args.Target:Kick(`Kicked by {runningPlr.Name} for "{kickMsg}"`)
+						Context.Comm:SendTo(runningPlr,"Hint",{Text = `Kicked {Args.Target.Name} for "{kickMsg}"`,Time = 10})
 					end
 				else
 					Context.Comm:SendTo(runningPlr,"Hint",{Text = `Cannot kick players that are a higher rank than you.`,Time = 10})
@@ -1301,8 +1303,8 @@ return function(Context)
 			end;
 		},
 		{
-			Name = "hint";
-			Aliases = {"h"};
+			Name = "notify";
+			Aliases = {"h","hint","n","notif"};
 			Rank = 1;
 			Category = "System";
 			Args = {
@@ -1317,7 +1319,10 @@ return function(Context)
 				}
 			};
 			Run = function(runningPlr,Args)
-				Context.Comm:SendTo(Args.Targets,"Hint",{Text = Args.Message,Time = 15,From = runningPlr.Name})
+				for _,Plr in Args.Targets do
+					local filteredText = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Plr.UserId)
+					Context.Comm:SendTo(Plr,"Hint",{Text = filteredText,Time = 15,From = runningPlr.Name})
+				end
 			end;
 		},
 		{
@@ -1337,7 +1342,10 @@ return function(Context)
 				}
 			};
 			Run = function(runningPlr,Args)
-				Context.Comm:SendTo(Args.Targets,"Message",{Text = Args.Message,Time = 30,From = runningPlr.Name})
+				for _,Plr in Args.Targets do
+					local filteredText = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Plr.UserId)
+					Context.Comm:SendTo(Plr,"Message",{Text = filteredText,Time = 30,From = runningPlr.Name})
+				end
 			end;
 		},
 	}
