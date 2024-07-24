@@ -2,6 +2,7 @@ return function(EasyAdmin)
 	local RunService = game:GetService("RunService")
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local PlayersService = game:GetService("Players")
+	local TextChatService = game:GetService("TextChatService")
 
 	--//Unpack packages (addons)
 	if EasyAdmin.Packages then
@@ -103,6 +104,35 @@ return function(EasyAdmin)
 	end
 
 	--// Finish Up
+	if EasyAdmin.Options.EnableTextChatCommands == true then
+		print'making text chat cmds'
+		local CommandsFolder = Instance.new("Folder",TextChatService)
+		CommandsFolder.Name = "EasyAdminCommands"
+
+		for _,Command in EasyAdmin.Commands:Get() do
+			local textChatCommand = Instance.new("TextChatCommand",CommandsFolder)
+			textChatCommand.Name = Command.Name
+			textChatCommand.PrimaryAlias = Command.Name
+
+			if Command.Aliases then
+				if #Command.Aliases >= 1 then
+					textChatCommand.SecondaryAlias = Command.Aliases[1]
+				end
+			end
+
+			textChatCommand.Triggered:Connect(function(textSource,string)
+				local UserId = textSource.UserId
+
+				if UserId then
+					local runningPlr = PlayersService:GetPlayerByUserId(UserId)
+
+					if runningPlr then
+						EasyAdmin.Commands:runCommand(runningPlr,string:sub(2))
+					end
+				end
+			end)
+		end
+	end
 
 	EasyAdmin.__initiated = os.clock()
 

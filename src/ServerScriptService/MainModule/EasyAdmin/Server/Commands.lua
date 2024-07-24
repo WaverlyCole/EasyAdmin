@@ -1494,7 +1494,7 @@ return function(Context)
 				if cmdName:lower() == Command.Name:lower() then
 					runCommand = true
 				else
-					for _, Alias in ipairs(Command.Aliases) do
+					for _, Alias in ipairs(Command.Aliases or {}) do
 						if cmdName:lower() == Alias:lower() then
 							runCommand = true
 							break

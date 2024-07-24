@@ -30,4 +30,5 @@ return {
 	},
 	
 	DisableFunCommands = false,
+	EnableTextChatCommands = true,
 }
