@@ -207,24 +207,30 @@ return function(Context)
 		
 		return response
 	end)
-	
-	Context.Comm:Hook("Hint",function(Data)
-		local newHint = script.Assets.Hint:Clone()
-		newHint.Top.Title.Text = `Notification from <b>{Data.From or "System"}</b>`
-		newHint.Content.Content.Text = Data.Text or ""
-		newHint.Size = UDim2.new(0,0,0,0)
-		
+
+	function UI.new(UIType,Props)
+		local Constructor = script.Constructors:FindFirstChild(UIType)
+
+		if Constructor then
+			return require(Constructor)(Context,Props)
+		else
+			Context.warn("Could not find constructor for UI Type:", UIType)
+		end
+	end
+
+	function UI:Notify(Props)
+		local newNotificaiton = self.new("Notification",Props)
 		local dismissed = false
 		
 		local function dismiss()
 			dismissed = true
-			newHint:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+			newNotificaiton:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
 			task.wait(.1)
-			newHint:Destroy()
+			newNotificaiton:Destroy()
 		end
 		
-		if Data.Time then
-			local endTime = time() + Data.Time
+		if Props.Time then
+			local endTime = time() + Props.Time
 			
 			local Conn;Conn = game:GetService("RunService").Stepped:Connect(function()
 				if dismissed then
@@ -234,8 +240,8 @@ return function(Context)
 				local timeLeft = endTime - currTime
 				local percentCompleted = 1 - (currTime/endTime)
 				
-				newHint.Top.Time.Text = math.floor(timeLeft+1).."s"
-				newHint.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
+				newNotificaiton.Top.Time.Text = math.floor(timeLeft+1).."s"
+				newNotificaiton.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
 				
 				if timeLeft <= 0 then
 					Conn:Disconnect()
@@ -243,38 +249,31 @@ return function(Context)
 				end
 			end)
 		else
-			newHint.Top.Time.Visible = false
-			newHint.Top.Line.Progress.Visible = false
+			newNotificaiton.Top.Time.Visible = false
+			newNotificaiton.Top.Line.Progress.Visible = false
 		end
 		
-		newHint.Button.Activated:Connect(dismiss)
+		newNotificaiton.Button.Activated:Connect(dismiss)
 		
-		newHint.Parent = UI.SysUI.Hints
+		newNotificaiton.Parent = UI.SysUI.Hints
 		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
-		newHint:TweenSize(UDim2.new(0,math.max(newHint.Content.Content.TextBounds.X + 20,newHint.Top.Title.TextBounds.X + 50),0,65),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
-		newHint.Sound:Play()
-		
-		return true
-	end)
-	
-	Context.Comm:Hook("Message",function(Data)
-		local newHint = script.Assets.Message:Clone()
-		newHint.Top.Title.Text = `Message from <b>{Data.From or "System"}</b>`
-		newHint.Content.Content.Text = Data.Text or ""
-		newHint.Size = UDim2.new(0,0,0,0)
+		newNotificaiton:TweenSize(UDim2.new(0,math.max(newNotificaiton.Content.Content.TextBounds.X + 20,newNotificaiton.Top.Title.TextBounds.X + 60),0,65),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+	end
 
+	function UI:Message(Props)
+		local newNotificaiton = self.new("Notification",Props)
 		local dismissed = false
-
+		
 		local function dismiss()
 			dismissed = true
-			newHint:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+			newNotificaiton:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
 			task.wait(.1)
-			newHint:Destroy()
+			newNotificaiton:Destroy()
 		end
-
-		if Data.Time then
-			local endTime = time() + Data.Time
-
+		
+		if Props.Time then
+			local endTime = time() + Props.Time
+			
 			local Conn;Conn = game:GetService("RunService").Stepped:Connect(function()
 				if dismissed then
 					Conn:Disconnect()
@@ -282,27 +281,42 @@ return function(Context)
 				local currTime = time()
 				local timeLeft = endTime - currTime
 				local percentCompleted = 1 - (currTime/endTime)
-
-				newHint.Top.Time.Text = math.floor(timeLeft+1).."s"
-				newHint.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
-
+				
+				newNotificaiton.Top.Time.Text = math.floor(timeLeft+1).."s"
+				newNotificaiton.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
+				
 				if timeLeft <= 0 then
 					Conn:Disconnect()
 					dismiss()
 				end
 			end)
 		else
-			newHint.Top.Time.Visible = false
-			newHint.Top.Line.Progress.Visible = false
+			newNotificaiton.Top.Time.Visible = false
+			newNotificaiton.Top.Line.Progress.Visible = false
 		end
-
-		newHint.Top.Exit.Button.Activated:Connect(dismiss)
-
-		newHint.Parent = UI.SysUI.Messages
-		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
-		newHint:TweenSize(UDim2.new(0,math.max(newHint.Content.Content.TextBounds.X + 45,newHint.Top.Title.TextBounds.X + 85),0,65 + newHint.Content.Content.TextBounds.Y),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
-		newHint.Sound:Play()
 		
+		newNotificaiton.Button.Activated:Connect(dismiss)
+		
+		newNotificaiton.Parent = UI.SysUI.Messages
+		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
+		newNotificaiton:TweenSize(UDim2.new(0,math.max(newNotificaiton.Content.Content.TextBounds.X + 45,newNotificaiton.Top.Title.TextBounds.X + 85),0,65 + newNotificaiton.Content.Content.TextBounds.Y),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+	end
+	
+	Context.Comm:Hook("Notify",function(Data)
+		Data.Title = `<b>{Data.From or "System"}</b>`
+		Data.From = nil
+
+		UI:Notify(Data)
+
+		return true
+	end)
+	
+	Context.Comm:Hook("Message",function(Data)
+		Data.Title = `<b>{Data.From or "System"}</b>`
+		Data.From = nil
+
+		UI:Message(Data)
+
 		return true
 	end)
 		

@@ -77,7 +77,7 @@ return function(EasyAdmin)
 		local textRank = EasyAdmin.Options.RankLookup[loadedRank]
 
 		if loadedRank > 0 then
-			EasyAdmin.Comm:SendTo(Player,"Hint",{Text = `Permission level: {textRank or loadedRank}`,Time = 6})
+			EasyAdmin.Comm:SendTo(Player,"Notify",{Text = `Permission level: {textRank or loadedRank}`,Time = 6})
 		end
 
 		Player.Chatted:Connect(function(Message)
