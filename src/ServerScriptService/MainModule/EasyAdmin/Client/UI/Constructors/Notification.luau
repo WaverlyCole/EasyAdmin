@@ -20,6 +20,7 @@ return function(Context, Props)
     textLabel.AnchorPoint = Vector2.new(.5,1)
     textLabel.Position = UDim2.new(.5,0,1,0)
     textLabel.BackgroundTransparency = 1
+    textLabel.TextTransparency = .1
     textLabel.Parent = Base.Content
 
     if Props.Text then

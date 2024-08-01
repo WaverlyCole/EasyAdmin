@@ -13,40 +13,37 @@ return function(Context)
 	local TweenService = game:GetService("TweenService")
 	local UITweenInfo = TweenInfo.new(.25)
 	
-	
 	function UI.newContentFrame(Name,RefreshCmd)
 		for _,v in UI.__activeContainers do
 			if v.Name == Name then
 				task.spawn(function()
-					v.Top.Refresh.Visible = true
+					v.Top.Buttons.Refresh.Visible = true
 					
 					for i = 0,360,10 do
 						if not v:IsDescendantOf(game) then return end
-						v.Top.Refresh.Rotation = i
+						v.Top.Buttons.Refresh.Button.Rotation = i
 						task.wait()
 					end
 					
 					if not RefreshCmd then
-						v.Top.Refresh.Visible = false
+						v.Top.Buttons.Refresh.Visible = false
 					end
 				end)
 				return v
 			end
 		end
 		
-		local new = script.Assets.ContentFrame:Clone()
-		new.Name = Name
-		new.Top.Title.Text = `<b> {Name or " "} </b>`
+		local new = UI.new("Container",{Name = Name, Title = `<b> {Name} </b>`})
 		
-		new.Top.Exit.Button.Activated:Connect(function()
+		new.Top.Buttons.Close.Button.Activated:Connect(function()
 			table.remove(UI.__activeContainers,table.find(UI.__activeContainers,new))
 			Context.Comm:Send("ClosedContainer",Name)
 			new:Destroy()
 		end)
 		
 		if RefreshCmd then
-			new.Top.Refresh.Visible = true
-			new.Top.Refresh.Button.Activated:Connect(function()
+			new.Top.Buttons.Refresh.Visible = true
+			new.Top.Buttons.Refresh.Button.Activated:Connect(function()
 				Context.Comm:Send("RunCommand",RefreshCmd)
 			end)
 		end
@@ -61,83 +58,29 @@ return function(Context)
 		return new
 	end
 	
-	function UI.addDropdownToLabel(textLabel, dropdownContent)
+	function UI.addLabelToCategory(textLabel, dropdownContent)
 		local existingDropdown = textLabel.DropdownContent:FindFirstChild(dropdownContent)
 
 		if existingDropdown then
 			return existingDropdown
 		end
 		
-		local newLabel = Instance.new("TextButton")
-		newLabel.Interactable = false
-		newLabel.Size = UDim2.new(1,0,0,30)
-		newLabel.BackgroundTransparency = 1
-		newLabel.TextTransparency = .1
-		newLabel.RichText = true
-		newLabel.TextColor3 = Color3.new(1, 1, 1)
-		newLabel.Name = dropdownContent
-
-		newLabel.Text = dropdownContent
+		local newLabel = UI.new("DropdownLabel",{Name = dropdownContent,Text = dropdownContent})
 		
 		newLabel.Parent = textLabel.DropdownContent
 		
 		return newLabel
 	end
 	
-	function UI.addTextLabel(contentFrame,labelContent)
+	function UI.addCategory(contentFrame,labelContent)
 		local existingLabel = contentFrame.Content:FindFirstChild(labelContent)
 		if existingLabel then
 			return existingLabel
 		end
 		
-		local new = script.Assets.ContentFrameLabel:Clone()
-
-		new.Name = labelContent
-		new.MainText.Text = labelContent
-		new.MainText.DropdownButton.Visible = false
-		new.Button.Interactable = false
-		
+		local new = UI.new("ContainerCategory",{Name = labelContent,Text = labelContent})
+	
 		new.Parent = contentFrame.Content
-		
-		local opened = false
-		new:SetAttribute("Open",opened)
-		
-		new.Button.Activated:Connect(function()
-			if new.MainText.DropdownButton.Visible == true then
-				opened = not opened
-				
-				new:SetAttribute("Open",opened)
-				
-				if opened then
-					local contentSize = new.DropdownContent.UIListLayout.AbsoluteContentSize.Y
-					
-					local sizeTween = TweenService:Create(new,UITweenInfo,{Size = UDim2.new(1,-6,0,30 + contentSize)}):Play()
-					local dropdownTween = TweenService:Create(new.MainText.DropdownButton,UITweenInfo,{Rotation = 180}):Play()
-				else
-					local sizeTween = TweenService:Create(new,UITweenInfo,{Size = UDim2.new(1,-6,0,30)}):Play()
-					local dropdownTween = TweenService:Create(new.MainText.DropdownButton,UITweenInfo,{Rotation = 0}):Play()
-				end
-			else
-				new:SetAttribute("Clicked",true)
-			end
-		end)
-		
-		-- Toggle dropdown button visible
-		
-		local function updateDropdownVisible()
-			if new:IsDescendantOf(game) then
-				if #new.DropdownContent:GetChildren() > 2 then
-					new.MainText.DropdownButton.Visible = true
-					new.Button.Interactable = true
-				else
-					new.MainText.DropdownButton.Visible = false
-					new.Button.Interactable = false
-				end
-			end
-		end
-		
-		new.DropdownContent.ChildAdded:Connect(updateDropdownVisible)
-		new.DropdownContent.ChildRemoved:Connect(updateDropdownVisible)
 		
 		return new
 	end
@@ -212,7 +155,9 @@ return function(Context)
 		local Constructor = script.Constructors:FindFirstChild(UIType)
 
 		if Constructor then
-			return require(Constructor)(Context,Props)
+			local obj = require(Constructor)(Context,Props)
+			obj:SetAttribute("UIType",UIType)
+			return obj
 		else
 			Context.warn("Could not find constructor for UI Type:", UIType)
 		end
@@ -261,7 +206,7 @@ return function(Context)
 	end
 
 	function UI:Message(Props)
-		local newNotificaiton = self.new("Notification",Props)
+		local newNotificaiton = self.new("Message",Props)
 		local dismissed = false
 		
 		local function dismiss()
@@ -295,7 +240,7 @@ return function(Context)
 			newNotificaiton.Top.Line.Progress.Visible = false
 		end
 		
-		newNotificaiton.Button.Activated:Connect(dismiss)
+		newNotificaiton.Top.Buttons.Close.Button.Activated:Connect(dismiss)
 		
 		newNotificaiton.Parent = UI.SysUI.Messages
 		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
@@ -329,11 +274,11 @@ return function(Context)
 			local newLabel = nil
 
 			if type(Value) == "table" then
-				newLabel = UI.addTextLabel(newContainer,tostring(Index))
+				newLabel = UI.addCategory(newContainer,tostring(Index))
 
 				for _,DropdownOption in Value do
 					if type(DropdownOption) == "table" then
-						local newDrop = UI.addDropdownToLabel(newLabel,tostring(DropdownOption.Text))
+						local newDrop = UI.addLabelToCategory(newLabel,tostring(DropdownOption.Text))
 						
 						newDrop.Interactable = true
 						
@@ -349,11 +294,11 @@ return function(Context)
 							end
 						end)
 					else
-						local newDrop = UI.addDropdownToLabel(newLabel,tostring(DropdownOption))
+						local newDrop = UI.addLabelToCategory(newLabel,tostring(DropdownOption))
 					end
 				end
 			else
-				newLabel = UI.addTextLabel(newContainer,tostring(Value))
+				newLabel = UI.addCategory(newContainer,tostring(Value))
 			end
 		end
 		
