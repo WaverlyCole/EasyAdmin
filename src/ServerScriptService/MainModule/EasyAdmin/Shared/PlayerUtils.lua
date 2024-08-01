@@ -1,5 +1,7 @@
 local Utils = {}
 
+local PlayersService = game:GetService("Players")
+
 function Utils:UserIdToName(UserId)
 	local succ,result = pcall(function()
 		return game:GetService("Players"):GetNameFromUserIdAsync(UserId)
@@ -84,7 +86,7 @@ function Utils:Teleport(Player,newCF)
 end
 
 function Utils:SetCharacterTransparency(Player, Transparency, DecalTransparency)
-	local Character = self:ResolveToPlayer(Player).Character
+	local Character = self:ResolveToCharacter(Player)
 	for _,v in ipairs(Character:GetDescendants()) do
 		if v:IsA("BasePart") and v.Name ~= "HumanoidRootPart" then
 			v.Transparency = Transparency
@@ -105,7 +107,7 @@ function Utils:getHumanoid(Player)
 end
 
 function Utils:getHRP(Player)
-	local Char = self:ResolveToPlayer(Player).Character
+	local Char = self:ResolveToCharacter(Player)
 	if Char then
 		local HRP = Char:FindFirstChild("HumanoidRootPart")
 		if HRP then
@@ -118,8 +120,8 @@ function Utils:ResolveToUserId(providedType: any)
 	if type(providedType) == "number" then
 		return providedType
 	elseif type(providedType) == "string" then
-		if game:GetService("Players"):FindFirstChild(providedType) then
-			return game:GetService("Players"):FindFirstChild(providedType).UserId
+		if PlayersService:FindFirstChild(providedType) then
+			return PlayersService:FindFirstChild(providedType).UserId
 		else
 			return tonumber(providedType)
 		end
@@ -139,10 +141,20 @@ function Utils:ResolveToUserId(providedType: any)
 end
 
 function Utils:ResolveToPlayer(providedType: any)
-	local UserId = self:ResolveToUserId(providedType)
-
-	if UserId then
-		return game:GetService("Players"):GetPlayerByUserId(UserId)
+	if type(providedType) == "number" then -- UserId
+		return PlayersService:GetPlayerByUserId(providedType)
+	elseif type(providedType) == "string" then --String
+		if PlayersService:FindFirstChild(providedType) then
+			return PlayersService:FindFirstChild(providedType).UserId
+		else
+			return self:ResolveToPlayer(tonumber(providedType))
+		end
+	elseif typeof(providedType) == "Instance" then --Instance
+		if providedType:IsA("Player") then
+			return providedType
+		elseif providedType:IsA("Model") then
+			return PlayersService:GetPlayerFromCharacter(providedType)
+		end
 	end
 
 	return nil
