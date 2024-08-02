@@ -62,6 +62,7 @@ return function(Context, Props)
     dropDownLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     dropDownLayout.VerticalAlignment = Enum.VerticalAlignment.Top
     dropDownLayout.Padding = UDim.new(0,4)
+    dropDownLayout.SortOrder = Enum.SortOrder.LayoutOrder
     dropDownLayout.Parent = dropdownContent
 
     if Props.Text then
@@ -94,8 +95,9 @@ return function(Context, Props)
     
     -- Toggle dropdown button visible
     
-    local function updateDropdownVisible()
+    local function updateDropdown()
         if newCategory:IsDescendantOf(game) then
+            --Dropdown button visible?
             if #dropdownContent:GetChildren() > 2 then
                 dropdownButton.Visible = true
                 categoryButton.Interactable = true
@@ -103,11 +105,17 @@ return function(Context, Props)
                 dropdownButton.Visible = false
                 categoryButton.Interactable = false
             end
+
+            --Need to update size?
+            if opened then
+                local contentSize = dropDownLayout.AbsoluteContentSize.Y
+                local sizeTween = TweenService:Create(newCategory,UITweenInfo,{Size = UDim2.new(1,-6,0,30 + contentSize)}):Play()
+            end
         end
     end
     
-    dropdownContent.ChildAdded:Connect(updateDropdownVisible)
-    dropdownContent.ChildRemoved:Connect(updateDropdownVisible)
+    dropdownContent.ChildAdded:Connect(updateDropdown)
+    dropdownContent.ChildRemoved:Connect(updateDropdown)
 	
     return newCategory
 end

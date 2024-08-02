@@ -214,11 +214,14 @@ return function(Context)
 
 					for i,Plr in PlayersService:GetPlayers() do
 						local plrInfo = {}
+						table.insert(plrInfo,`<i>Player Info</i>`)
 
 						local loadedRank = Context.Ranks:Get(Plr)
 						local textRank = Context.Options.RankLookup[loadedRank]
 
 						table.insert(plrInfo,`Rank: {textRank or loadedRank}`)
+						local formattedAge = Context.Util:formatTime(Plr.AccountAge * 86400,{"years","days"},true)
+						table.insert(plrInfo,`Age: {formattedAge}`)
 
 						table.insert(plrInfo,`<i>Commands</i>`)
 

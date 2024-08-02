@@ -15,5 +15,12 @@ return function(Context, Props)
     content.ScrollBarThickness = 2
     content.Parent = newContainer
 
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    listLayout.Padding = UDim.new(0,4)
+    listLayout.Parent = content
+
     return newContainer
 end

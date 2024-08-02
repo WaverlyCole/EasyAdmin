@@ -266,38 +266,58 @@ return function(Context)
 	end)
 		
 	Context.Comm:Hook("DisplayTable",function(Data)
-		local newContainer = UI.newContentFrame(Data.Name or "Unknown",Data.Refresh)
+		local newContainer = UI.newContentFrame(Data.Name or "Unknown", Data.Refresh)
 
 		local Content = type(Data.Content) == "table" and Data.Content or {}
 
 		for Index, Value in pairs(Content) do
 			local newLabel = nil
 
-			if type(Value) == "table" then
+			if type(Value) == "table" then -- If Category is a table of labels
 				newLabel = UI.addCategory(newContainer,tostring(Index))
+
+				for _,v in newLabel.DropdownContent:GetChildren() do -- clear current labels
+					if v:GetAttribute("UIType") == "DropdownLabel" then
+						print'a'
+						v:Destroy()
+					end
+				end
 
 				for _,DropdownOption in Value do
 					if type(DropdownOption) == "table" then
 						local newDrop = UI.addLabelToCategory(newLabel,tostring(DropdownOption.Text))
 						
-						newDrop.Interactable = true
-						
-						newDrop.MouseEnter:Connect(function()
-							newDrop.Text = `[ {DropdownOption.Text} ]`
-						end)
-						newDrop.MouseLeave:Connect(function()
-							newDrop.Text = DropdownOption.Text
-						end)
-						newDrop.Activated:Connect(function()
-							if DropdownOption.Command then
-								Context.Comm:Send("RunCommand",DropdownOption.Command)
+						--Command
+						if DropdownOption.Command then
+							newDrop.Interactable = true
+							
+							newDrop.MouseEnter:Connect(function()
+								newDrop.Text = `[ {DropdownOption.Text} ]`
+							end)
+							newDrop.MouseLeave:Connect(function()
+								newDrop.Text = DropdownOption.Text
+							end)
+							newDrop.Activated:Connect(function()
+								if DropdownOption.Command then
+									Context.Comm:Send("RunCommand",DropdownOption.Command)
+								end
+							end)
+						end
+
+						--DiffTime
+						if DropdownOption.DiffTime then
+							while newDrop:IsDescendantOf(game) do
+								local timePassed = os.difftime(os.time(),DropdownOption.DiffTime)
+								newDrop.Text = DropdownOption.Text.. Context.Util:formatTime(timePassed,nil,true)
+								task.wait(1)
 							end
-						end)
+						end
+
 					else
 						local newDrop = UI.addLabelToCategory(newLabel,tostring(DropdownOption))
 					end
 				end
-			else
+			else -- Else if category is not a table
 				newLabel = UI.addCategory(newContainer,tostring(Value))
 			end
 		end
