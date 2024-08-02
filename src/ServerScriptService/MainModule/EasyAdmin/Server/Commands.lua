@@ -168,7 +168,7 @@ return function(Context)
 					
 					Context.Comm:SendTo(runningPlr,"DisplayTable",{Name = "Command Info: "..selectedCommand.Name,Content = tbl})
 				else
-					Context.Comm:SendTo(runningPlr,"Hint",{Text = `No command matching "{Args.CommandSearch}" was found.`,Time = 5})
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `No command matching "{Args.CommandSearch}" was found.`,Time = 5})
 				end
 			end;
 		},
@@ -214,11 +214,14 @@ return function(Context)
 
 					for i,Plr in PlayersService:GetPlayers() do
 						local plrInfo = {}
+						table.insert(plrInfo,`<i>Player Info</i>`)
 
 						local loadedRank = Context.Ranks:Get(Plr)
 						local textRank = Context.Options.RankLookup[loadedRank]
 
 						table.insert(plrInfo,`Rank: {textRank or loadedRank}`)
+						local formattedAge = Context.Util:formatTime(Plr.AccountAge * 86400,{"years","days"},true)
+						table.insert(plrInfo,`Age: {formattedAge}`)
 
 						table.insert(plrInfo,`<i>Commands</i>`)
 
@@ -237,11 +240,11 @@ return function(Context)
 				
 				local plrJoining = PlayersService.PlayerAdded:Connect(function(Plr)
 					buildPlayersTable()
-					Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Plr.Name} joined the server.`,From = `Players`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Plr.Name} joined the server.`,From = `Players`,Time = 10})
 				end)
 				local plrLeaving = PlayersService.PlayerRemoving:Connect(function(Plr)
 					buildPlayersTable()
-					Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Plr.Name} left the server.`,From = `Players`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Plr.Name} left the server.`,From = `Players`,Time = 10})
 				end)
 				
 				local containerConn;containerConn = Context.Comm:Hook("ClosedContainer",function(Plr,Name)
@@ -422,7 +425,7 @@ return function(Context)
 			};
 			Run = function(runningPlr,Args)
 				for _,Player in Args.Targets do
-					Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Player.Name}'s Ping is {Player:GetNetworkPing() * 1000}ms`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}'s Ping is {Player:GetNetworkPing() * 1000}ms`,Time = 10})
 				end
 			end;
 		},
@@ -450,11 +453,11 @@ return function(Context)
 						local response = Context.Comm:Invoke(Player,"Confirmation",{From = runningPlr.Name,Text = msg,Time = 15})
 						
 						if response == true then
-							Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Player.Name}' confirmed!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' confirmed!`,Time = 10})
 						elseif response == false then
-							Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Player.Name}' denied!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' denied!`,Time = 10})
 						elseif response == nil then
-							Context.Comm:SendTo(runningPlr,"Hint",{Text = `{Player.Name}' did not respond!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' did not respond!`,Time = 10})
 						end
 					end)
 				end
@@ -641,10 +644,10 @@ return function(Context)
 					
 					if response == true then
 						Args.Target:Kick(`Kicked by {runningPlr.Name} for "{kickMsg}"`)
-						Context.Comm:SendTo(runningPlr,"Hint",{Text = `Kicked {Args.Target.Name} for "{kickMsg}"`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Kicked {Args.Target.Name} for "{kickMsg}"`,Time = 10})
 					end
 				else
-					Context.Comm:SendTo(runningPlr,"Hint",{Text = `Cannot kick players that are a higher rank than you.`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `Cannot kick players that are a higher rank than you.`,Time = 10})
 				end
 			end;
 		},
@@ -674,13 +677,13 @@ return function(Context)
 						if Context.Data:saveRank(Args.UserId,Args.Rank) then
 							local newRank = Context.Ranks:calculateRank(Args.UserId)
 							
-							Context.Comm:SendTo(runningPlr,"Hint",{Text = `Set {Context.PlayerUtils:UserIdToName(Args.UserId)}({Args.UserId})'s rank to {Args.Rank}`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `Set {Context.PlayerUtils:UserIdToName(Args.UserId)}({Args.UserId})'s rank to {Args.Rank}`,Time = 10})
 						end
 					else
-						Context.Comm:SendTo(runningPlr,"Hint",{Text = `Cannot set rank equal to or higher than your own.`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Cannot set rank equal to or higher than your own.`,Time = 10})
 					end
 				else
-					Context.Comm:SendTo(runningPlr,"Hint",{Text = `The target player is a higher or equal rank.`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `The target player is a higher or equal rank.`,Time = 10})
 				end
 			end;
 		},
@@ -733,16 +736,16 @@ return function(Context)
 
 						if succ then
 
-							Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `Banned {username}({Args.UserId}) for {timeString} for {Args.Reason}`})
+							Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `Banned {username}({Args.UserId}) for {timeString} for {Args.Reason}`})
 						else
-							Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `An error occured trying to ban {Args.UserId}`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `An error occured trying to ban {Args.UserId}`,Time = 10})
 							Context.warn(result)
 						end
 					else
-						Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `Ban cancelled.`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `Ban cancelled.`,Time = 10})
 					end
 				else
-					Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `Cannot Ban players that are a higher or same rank as you.`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `Cannot Ban players that are a higher or same rank as you.`,Time = 10})
 				end
 			end;
 		},
@@ -771,7 +774,7 @@ return function(Context)
 					if runningRank > theirRank then
 						Context.Commands:runCommand(Player, Args.Command)
 					else
-						Context.Comm:SendTo(runningPlr,"Hint",{Text = `Cannot sudo players that are a higher or same rank as you.`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Cannot sudo players that are a higher or same rank as you.`,Time = 10})
 					end
 				end
 			end;
@@ -826,7 +829,7 @@ return function(Context)
 					
 					Context.Comm:SendTo(runningPlr,"DisplayTable",{Name = `Ban history: {Context.PlayerUtils:UserIdToName(Args.UserId)}`,Content = displayResults,Refresh = `banhistory {Args.UserId}`})
 				else
-					Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `An error occured trying to get ban history for {Context.PlayerUtils:UserIdToName(Args.UserId)}({Args.UserId})`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `An error occured trying to get ban history for {Context.PlayerUtils:UserIdToName(Args.UserId)}({Args.UserId})`,Time = 10})
 					Context.warn(result)
 				end
 			end;
@@ -862,13 +865,13 @@ return function(Context)
 					end)
 
 					if succ then
-						Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `Unbanned {username}({Args.UserId}).`})
+						Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `Unbanned {username}({Args.UserId}).`})
 					else
-						Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `An error occured trying to unban {Context.PlayerUtils:UserIdToName(Args.UserId)}({Args.UserId})`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `An error occured trying to unban {Context.PlayerUtils:UserIdToName(Args.UserId)}({Args.UserId})`,Time = 10})
 						Context.warn(result)
 					end
 				else
-					Context.Comm:SendTo(runningPlr,"Hint",{From = "Bans",Text = `Unban cancelled.`,Time = 10})
+					Context.Comm:SendTo(runningPlr,"Notify",{From = "Bans",Text = `Unban cancelled.`,Time = 10})
 				end
 			end;
 		},
@@ -924,7 +927,7 @@ return function(Context)
 				
 				local username = Context.PlayerUtils:UserIdToName(Args.UserId)
 				
-				Context.Comm:SendTo(runningPlr,"Hint",{Text = `{username}({Args.UserId}) is rank {textRank or loadedRank} `,Time = 10})
+				Context.Comm:SendTo(runningPlr,"Notify",{Text = `{username}({Args.UserId}) is rank {textRank or loadedRank} `,Time = 10})
 			end;
 		},
 		{
@@ -1132,8 +1135,8 @@ return function(Context)
 					local Humanoid = Context.PlayerUtils:getHumanoid(Player)
 					if Humanoid then
 						Humanoid.DisplayName = Args.NewName
-						Context.Comm:SendTo(runningPlr,"Hint",{Text = `Set {Player.Name}'s display name to "{Args.NewName}"`,Time = 10})
-						Context.Comm:SendTo(Player,"Hint",{Text = `{runningPlr.Name} set your display name to "{Args.NewName}"`,Time = 10}) --we need to let them know since they cant see themselves
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Set {Player.Name}'s display name to "{Args.NewName}"`,Time = 10})
+						Context.Comm:SendTo(Player,"Notify",{Text = `{runningPlr.Name} set your display name to "{Args.NewName}"`,Time = 10}) --we need to let them know since they cant see themselves
 					end
 				end
 			end;
@@ -1162,7 +1165,7 @@ return function(Context)
 					
 					if Humanoid and desc then
 						Humanoid:ApplyDescription(desc)
-						Context.Comm:SendTo(runningPlr,"Hint",{Text = `Set {Player.Name}'s appearance to "{Args.UserId}"`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Set {Player.Name}'s appearance to "{Args.UserId}"`,Time = 10})
 					end
 				end
 			end;
@@ -1321,7 +1324,7 @@ return function(Context)
 			Run = function(runningPlr,Args)
 				for _,Plr in Args.Targets do
 					local filteredText = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Plr.UserId)
-					Context.Comm:SendTo(Plr,"Hint",{Text = filteredText,Time = 15,From = runningPlr.Name})
+					Context.Comm:SendTo(Plr,"Notify",{Text = filteredText,Time = 15,From = runningPlr.Name})
 				end
 			end;
 		},
@@ -1494,7 +1497,7 @@ return function(Context)
 				if cmdName:lower() == Command.Name:lower() then
 					runCommand = true
 				else
-					for _, Alias in ipairs(Command.Aliases) do
+					for _, Alias in ipairs(Command.Aliases or {}) do
 						if cmdName:lower() == Alias:lower() then
 							runCommand = true
 							break

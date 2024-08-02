@@ -41,36 +41,55 @@ function Util:interpretTimeString(timeString)
 	end
 end
 
-function Util:formatTime(seconds)
+function Util:formatTime(seconds, units, expanded)
 	if seconds == nil then
 		seconds = 0
 	end
-	
-	local days = math.floor(seconds / 86400)
-	seconds = seconds % 86400
 
-	local hours = math.floor(seconds / 3600)
-	seconds = seconds % 3600
+	local timeUnits = {
+		years = math.floor(seconds / 31536000),
+		days = math.floor((seconds % 31536000) / 86400),
+		hours = math.floor((seconds % 86400) / 3600),
+		minutes = math.floor((seconds % 3600) / 60),
+		seconds = seconds % 60,
+	}
 
-	local minutes = math.floor(seconds / 60)
-	seconds = seconds % 60
+	local timeStrings = {
+		years = expanded and "y " or "y",
+		days = expanded and "d " or "d",
+		hours = expanded and "h " or "h",
+		minutes = expanded and "m " or "m",
+		seconds = expanded and "s " or "s",
+	}
+
+	-- If units is nil, default to all non-zero units
+	if units == nil then
+		units = {}
+		for unit, value in pairs(timeUnits) do
+			if value > 0 then
+				table.insert(units, unit)
+			end
+		end
+	end
 
 	local timeString = ""
-	if days > 0 then
-		timeString = timeString .. days .. "d"
+
+	for _, unit in ipairs(units) do
+		if timeUnits[unit] > 0 then
+			timeString = timeString .. timeUnits[unit] .. timeStrings[unit]
+		end
 	end
-	if hours > 0 then
-		timeString = timeString .. hours .. "h"
-	end
-	if minutes > 0 then
-		timeString = timeString .. minutes .. "m"
-	end
-	if seconds > 0 then
-		timeString = timeString .. seconds .. "s"
+
+	-- Trim any trailing space if expanded
+	if expanded then
+		timeString = timeString:match("^%s*(.-)%s*$")
 	end
 
 	return timeString
 end
+
+
+
 
 
 return Util

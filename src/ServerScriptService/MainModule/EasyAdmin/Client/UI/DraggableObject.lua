@@ -5,7 +5,7 @@
 	For instructions on how to use this module, go to this link:
 	https://devforum.roblox.com/t/simple-module-for-creating-draggable-gui-elements/230678
 	
-	Modified 07/04/2024 to add dragObject. This will allow you to sepcify the "object" you grab onto to drag, but the dragObject
+	Modified 07/04/2024 by WaverlyCole to add dragObject. This will allow you to sepcify the "object" you grab onto to drag, but the dragObject
 	is the actual object that will move around.
 --]]
 

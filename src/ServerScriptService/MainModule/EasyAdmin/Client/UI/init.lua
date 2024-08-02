@@ -13,40 +13,37 @@ return function(Context)
 	local TweenService = game:GetService("TweenService")
 	local UITweenInfo = TweenInfo.new(.25)
 	
-	
 	function UI.newContentFrame(Name,RefreshCmd)
 		for _,v in UI.__activeContainers do
 			if v.Name == Name then
 				task.spawn(function()
-					v.Top.Refresh.Visible = true
+					v.Top.Buttons.Refresh.Visible = true
 					
 					for i = 0,360,10 do
 						if not v:IsDescendantOf(game) then return end
-						v.Top.Refresh.Rotation = i
+						v.Top.Buttons.Refresh.Button.Rotation = i
 						task.wait()
 					end
 					
 					if not RefreshCmd then
-						v.Top.Refresh.Visible = false
+						v.Top.Buttons.Refresh.Visible = false
 					end
 				end)
 				return v
 			end
 		end
 		
-		local new = script.Assets.ContentFrame:Clone()
-		new.Name = Name
-		new.Top.Title.Text = `<b> {Name or " "} </b>`
+		local new = UI.new("Container",{Name = Name, Title = `<b> {Name} </b>`})
 		
-		new.Top.Exit.Button.Activated:Connect(function()
+		new.Top.Buttons.Close.Button.Activated:Connect(function()
 			table.remove(UI.__activeContainers,table.find(UI.__activeContainers,new))
 			Context.Comm:Send("ClosedContainer",Name)
 			new:Destroy()
 		end)
 		
 		if RefreshCmd then
-			new.Top.Refresh.Visible = true
-			new.Top.Refresh.Button.Activated:Connect(function()
+			new.Top.Buttons.Refresh.Visible = true
+			new.Top.Buttons.Refresh.Button.Activated:Connect(function()
 				Context.Comm:Send("RunCommand",RefreshCmd)
 			end)
 		end
@@ -61,83 +58,29 @@ return function(Context)
 		return new
 	end
 	
-	function UI.addDropdownToLabel(textLabel, dropdownContent)
+	function UI.addLabelToCategory(textLabel, dropdownContent)
 		local existingDropdown = textLabel.DropdownContent:FindFirstChild(dropdownContent)
 
 		if existingDropdown then
 			return existingDropdown
 		end
 		
-		local newLabel = Instance.new("TextButton")
-		newLabel.Interactable = false
-		newLabel.Size = UDim2.new(1,0,0,30)
-		newLabel.BackgroundTransparency = 1
-		newLabel.TextTransparency = .1
-		newLabel.RichText = true
-		newLabel.TextColor3 = Color3.new(1, 1, 1)
-		newLabel.Name = dropdownContent
-
-		newLabel.Text = dropdownContent
+		local newLabel = UI.new("DropdownLabel",{Name = dropdownContent,Text = dropdownContent})
 		
 		newLabel.Parent = textLabel.DropdownContent
 		
 		return newLabel
 	end
 	
-	function UI.addTextLabel(contentFrame,labelContent)
+	function UI.addCategory(contentFrame,labelContent)
 		local existingLabel = contentFrame.Content:FindFirstChild(labelContent)
 		if existingLabel then
 			return existingLabel
 		end
 		
-		local new = script.Assets.ContentFrameLabel:Clone()
-
-		new.Name = labelContent
-		new.MainText.Text = labelContent
-		new.MainText.DropdownButton.Visible = false
-		new.Button.Interactable = false
-		
+		local new = UI.new("ContainerCategory",{Name = labelContent,Text = labelContent})
+	
 		new.Parent = contentFrame.Content
-		
-		local opened = false
-		new:SetAttribute("Open",opened)
-		
-		new.Button.Activated:Connect(function()
-			if new.MainText.DropdownButton.Visible == true then
-				opened = not opened
-				
-				new:SetAttribute("Open",opened)
-				
-				if opened then
-					local contentSize = new.DropdownContent.UIListLayout.AbsoluteContentSize.Y
-					
-					local sizeTween = TweenService:Create(new,UITweenInfo,{Size = UDim2.new(1,-6,0,30 + contentSize)}):Play()
-					local dropdownTween = TweenService:Create(new.MainText.DropdownButton,UITweenInfo,{Rotation = 180}):Play()
-				else
-					local sizeTween = TweenService:Create(new,UITweenInfo,{Size = UDim2.new(1,-6,0,30)}):Play()
-					local dropdownTween = TweenService:Create(new.MainText.DropdownButton,UITweenInfo,{Rotation = 0}):Play()
-				end
-			else
-				new:SetAttribute("Clicked",true)
-			end
-		end)
-		
-		-- Toggle dropdown button visible
-		
-		local function updateDropdownVisible()
-			if new:IsDescendantOf(game) then
-				if #new.DropdownContent:GetChildren() > 2 then
-					new.MainText.DropdownButton.Visible = true
-					new.Button.Interactable = true
-				else
-					new.MainText.DropdownButton.Visible = false
-					new.Button.Interactable = false
-				end
-			end
-		end
-		
-		new.DropdownContent.ChildAdded:Connect(updateDropdownVisible)
-		new.DropdownContent.ChildRemoved:Connect(updateDropdownVisible)
 		
 		return new
 	end
@@ -207,24 +150,32 @@ return function(Context)
 		
 		return response
 	end)
-	
-	Context.Comm:Hook("Hint",function(Data)
-		local newHint = script.Assets.Hint:Clone()
-		newHint.Top.Title.Text = `Notification from <b>{Data.From or "System"}</b>`
-		newHint.Content.Content.Text = Data.Text or ""
-		newHint.Size = UDim2.new(0,0,0,0)
-		
+
+	function UI.new(UIType,Props)
+		local Constructor = script.Constructors:FindFirstChild(UIType)
+
+		if Constructor then
+			local obj = require(Constructor)(Context,Props)
+			obj:SetAttribute("UIType",UIType)
+			return obj
+		else
+			Context.warn("Could not find constructor for UI Type:", UIType)
+		end
+	end
+
+	function UI:Notify(Props)
+		local newNotificaiton = self.new("Notification",Props)
 		local dismissed = false
 		
 		local function dismiss()
 			dismissed = true
-			newHint:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+			newNotificaiton:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
 			task.wait(.1)
-			newHint:Destroy()
+			newNotificaiton:Destroy()
 		end
 		
-		if Data.Time then
-			local endTime = time() + Data.Time
+		if Props.Time then
+			local endTime = time() + Props.Time
 			
 			local Conn;Conn = game:GetService("RunService").Stepped:Connect(function()
 				if dismissed then
@@ -234,8 +185,8 @@ return function(Context)
 				local timeLeft = endTime - currTime
 				local percentCompleted = 1 - (currTime/endTime)
 				
-				newHint.Top.Time.Text = math.floor(timeLeft+1).."s"
-				newHint.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
+				newNotificaiton.Top.Time.Text = math.floor(timeLeft+1).."s"
+				newNotificaiton.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
 				
 				if timeLeft <= 0 then
 					Conn:Disconnect()
@@ -243,38 +194,31 @@ return function(Context)
 				end
 			end)
 		else
-			newHint.Top.Time.Visible = false
-			newHint.Top.Line.Progress.Visible = false
+			newNotificaiton.Top.Time.Visible = false
+			newNotificaiton.Top.Line.Progress.Visible = false
 		end
 		
-		newHint.Button.Activated:Connect(dismiss)
+		newNotificaiton.Button.Activated:Connect(dismiss)
 		
-		newHint.Parent = UI.SysUI.Hints
+		newNotificaiton.Parent = UI.SysUI.Hints
 		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
-		newHint:TweenSize(UDim2.new(0,math.max(newHint.Content.Content.TextBounds.X + 20,newHint.Top.Title.TextBounds.X + 50),0,65),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
-		newHint.Sound:Play()
-		
-		return true
-	end)
-	
-	Context.Comm:Hook("Message",function(Data)
-		local newHint = script.Assets.Message:Clone()
-		newHint.Top.Title.Text = `Message from <b>{Data.From or "System"}</b>`
-		newHint.Content.Content.Text = Data.Text or ""
-		newHint.Size = UDim2.new(0,0,0,0)
+		newNotificaiton:TweenSize(UDim2.new(0,math.max(newNotificaiton.Content.Content.TextBounds.X + 20,newNotificaiton.Top.Title.TextBounds.X + 60),0,65),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+	end
 
+	function UI:Message(Props)
+		local newNotificaiton = self.new("Message",Props)
 		local dismissed = false
-
+		
 		local function dismiss()
 			dismissed = true
-			newHint:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+			newNotificaiton:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
 			task.wait(.1)
-			newHint:Destroy()
+			newNotificaiton:Destroy()
 		end
-
-		if Data.Time then
-			local endTime = time() + Data.Time
-
+		
+		if Props.Time then
+			local endTime = time() + Props.Time
+			
 			local Conn;Conn = game:GetService("RunService").Stepped:Connect(function()
 				if dismissed then
 					Conn:Disconnect()
@@ -282,64 +226,99 @@ return function(Context)
 				local currTime = time()
 				local timeLeft = endTime - currTime
 				local percentCompleted = 1 - (currTime/endTime)
-
-				newHint.Top.Time.Text = math.floor(timeLeft+1).."s"
-				newHint.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
-
+				
+				newNotificaiton.Top.Time.Text = math.floor(timeLeft+1).."s"
+				newNotificaiton.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
+				
 				if timeLeft <= 0 then
 					Conn:Disconnect()
 					dismiss()
 				end
 			end)
 		else
-			newHint.Top.Time.Visible = false
-			newHint.Top.Line.Progress.Visible = false
+			newNotificaiton.Top.Time.Visible = false
+			newNotificaiton.Top.Line.Progress.Visible = false
 		end
-
-		newHint.Top.Exit.Button.Activated:Connect(dismiss)
-
-		newHint.Parent = UI.SysUI.Messages
-		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
-		newHint:TweenSize(UDim2.new(0,math.max(newHint.Content.Content.TextBounds.X + 45,newHint.Top.Title.TextBounds.X + 85),0,65 + newHint.Content.Content.TextBounds.Y),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
-		newHint.Sound:Play()
 		
+		newNotificaiton.Top.Buttons.Close.Button.Activated:Connect(dismiss)
+		
+		newNotificaiton.Parent = UI.SysUI.Messages
+		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
+		newNotificaiton:TweenSize(UDim2.new(0,math.max(newNotificaiton.Content.Content.TextBounds.X + 45,newNotificaiton.Top.Title.TextBounds.X + 85),0,65 + newNotificaiton.Content.Content.TextBounds.Y),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+	end
+	
+	Context.Comm:Hook("Notify",function(Data)
+		Data.Title = `<b>{Data.From or "System"}</b>`
+		Data.From = nil
+
+		UI:Notify(Data)
+
+		return true
+	end)
+	
+	Context.Comm:Hook("Message",function(Data)
+		Data.Title = `<b>{Data.From or "System"}</b>`
+		Data.From = nil
+
+		UI:Message(Data)
+
 		return true
 	end)
 		
 	Context.Comm:Hook("DisplayTable",function(Data)
-		local newContainer = UI.newContentFrame(Data.Name or "Unknown",Data.Refresh)
+		local newContainer = UI.newContentFrame(Data.Name or "Unknown", Data.Refresh)
 
 		local Content = type(Data.Content) == "table" and Data.Content or {}
 
 		for Index, Value in pairs(Content) do
 			local newLabel = nil
 
-			if type(Value) == "table" then
-				newLabel = UI.addTextLabel(newContainer,tostring(Index))
+			if type(Value) == "table" then -- If Category is a table of labels
+				newLabel = UI.addCategory(newContainer,tostring(Index))
+
+				for _,v in newLabel.DropdownContent:GetChildren() do -- clear current labels
+					if v:GetAttribute("UIType") == "DropdownLabel" then
+						print'a'
+						v:Destroy()
+					end
+				end
 
 				for _,DropdownOption in Value do
 					if type(DropdownOption) == "table" then
-						local newDrop = UI.addDropdownToLabel(newLabel,tostring(DropdownOption.Text))
+						local newDrop = UI.addLabelToCategory(newLabel,tostring(DropdownOption.Text))
 						
-						newDrop.Interactable = true
-						
-						newDrop.MouseEnter:Connect(function()
-							newDrop.Text = `[ {DropdownOption.Text} ]`
-						end)
-						newDrop.MouseLeave:Connect(function()
-							newDrop.Text = DropdownOption.Text
-						end)
-						newDrop.Activated:Connect(function()
-							if DropdownOption.Command then
-								Context.Comm:Send("RunCommand",DropdownOption.Command)
+						--Command
+						if DropdownOption.Command then
+							newDrop.Interactable = true
+							
+							newDrop.MouseEnter:Connect(function()
+								newDrop.Text = `[ {DropdownOption.Text} ]`
+							end)
+							newDrop.MouseLeave:Connect(function()
+								newDrop.Text = DropdownOption.Text
+							end)
+							newDrop.Activated:Connect(function()
+								if DropdownOption.Command then
+									Context.Comm:Send("RunCommand",DropdownOption.Command)
+								end
+							end)
+						end
+
+						--DiffTime
+						if DropdownOption.DiffTime then
+							while newDrop:IsDescendantOf(game) do
+								local timePassed = os.difftime(os.time(),DropdownOption.DiffTime)
+								newDrop.Text = DropdownOption.Text.. Context.Util:formatTime(timePassed,nil,true)
+								task.wait(1)
 							end
-						end)
+						end
+
 					else
-						local newDrop = UI.addDropdownToLabel(newLabel,tostring(DropdownOption))
+						local newDrop = UI.addLabelToCategory(newLabel,tostring(DropdownOption))
 					end
 				end
-			else
-				newLabel = UI.addTextLabel(newContainer,tostring(Value))
+			else -- Else if category is not a table
+				newLabel = UI.addCategory(newContainer,tostring(Value))
 			end
 		end
 		
