@@ -104,8 +104,6 @@ return function(Context, Props)
     content.Size = UDim2.new(1,-8,1,-39)
     content.Parent = uiGroup
 
-    warn(Props)
-
     if Props.Title then
         topBarTitle.Text = Props.Title
     end

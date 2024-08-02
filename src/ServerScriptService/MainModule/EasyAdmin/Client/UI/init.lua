@@ -133,7 +133,7 @@ return function(Context)
 		newHint.Parent = UI.SysUI.Prompts
 		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
 		
-		newHint:TweenSize(UDim2.new(0,math.max(newHint.Main.Content.Content.TextBounds.X + 35,newHint.Main.Top.Title.TextBounds.X + 60),0,newHint.Main.Content.Content.TextBounds.Y + 80),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+		newHint:TweenSize(UDim2.new(0,math.max(newHint.Main.Content.Content.TextBounds.X + 35,newHint.Main.Top.Title.TextBounds.X + 85),0,newHint.Main.Content.Content.TextBounds.Y + 80),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
 		--newHint.Sound:Play()
 
 		newHint.Options.Confirm.Button.Activated:Connect(function()
@@ -202,7 +202,7 @@ return function(Context)
 		
 		newNotificaiton.Parent = UI.SysUI.Hints
 		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
-		newNotificaiton:TweenSize(UDim2.new(0,math.max(newNotificaiton.Content.Content.TextBounds.X + 20,newNotificaiton.Top.Title.TextBounds.X + 60),0,65),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+		newNotificaiton:TweenSize(UDim2.new(0,math.max(newNotificaiton.Content.Content.TextBounds.X + 20,newNotificaiton.Top.Title.TextBounds.X + 85),0,65),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
 	end
 
 	function UI:Message(Props)
