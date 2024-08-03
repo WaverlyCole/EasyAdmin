@@ -278,7 +278,6 @@ return function(Context)
 
 				for _,v in newLabel.DropdownContent:GetChildren() do -- clear current labels
 					if v:GetAttribute("UIType") == "DropdownLabel" then
-						print'a'
 						v:Destroy()
 					end
 				end

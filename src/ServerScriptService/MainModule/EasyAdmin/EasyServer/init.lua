@@ -91,6 +91,47 @@ return function(EasyAdmin)
 		return EasyAdmin.Request:Invoke(Player,"CheckContainer",ContainerName)
 	end
 
+	--// TextChatCommands
+	if EasyAdmin.Options.EnableTextChatCommands == true then
+		TextChatService:SetAttribute("TextChatCommandsEnabled", true)
+		local CommandsFolder = Instance.new("Folder",TextChatService)
+		CommandsFolder.Name = "EasyAdminCommands"
+
+		for _,Command in EasyAdmin.Commands:Get() do
+			local function connectTextChatCommand(obj)
+				obj.Triggered:Connect(function(textSource,string)
+					local UserId = textSource.UserId
+	
+					if UserId then
+						local runningPlr = PlayersService:GetPlayerByUserId(UserId)
+	
+						if runningPlr then
+							EasyAdmin.Commands:runCommand(runningPlr,string:sub(2))
+						end
+					end
+				end)
+			end
+
+			local textChatCommand = Instance.new("TextChatCommand",CommandsFolder)
+			textChatCommand.Name = Command.Name
+			textChatCommand:SetAttribute("Rank",Command.Rank)
+			textChatCommand.PrimaryAlias = "/"..Command.Name
+			connectTextChatCommand(textChatCommand)
+
+			if Command.Aliases then
+				for _,Alias in Command.Aliases do
+					local textChatCommandAlias = Instance.new("TextChatCommand",textChatCommand)
+					textChatCommandAlias.Name = Alias
+					textChatCommandAlias.PrimaryAlias = "/"..Alias
+					connectTextChatCommand(textChatCommandAlias)
+				end
+			end
+		end
+	end
+
+	EasyAdmin.__initiated = os.clock()
+	script.Parent = nil
+	
 	--// Connect clients
 
 	local newClient = script:WaitForChild("ClientLoader"):Clone()
@@ -103,39 +144,5 @@ return function(EasyAdmin)
 		end)
 	end
 
-	--// Finish Up
-	if EasyAdmin.Options.EnableTextChatCommands == true then
-		print'making text chat cmds'
-		local CommandsFolder = Instance.new("Folder",TextChatService)
-		CommandsFolder.Name = "EasyAdminCommands"
-
-		for _,Command in EasyAdmin.Commands:Get() do
-			local textChatCommand = Instance.new("TextChatCommand",CommandsFolder)
-			textChatCommand.Name = Command.Name
-			textChatCommand.PrimaryAlias = Command.Name
-
-			if Command.Aliases then
-				if #Command.Aliases >= 1 then
-					textChatCommand.SecondaryAlias = Command.Aliases[1]
-				end
-			end
-
-			textChatCommand.Triggered:Connect(function(textSource,string)
-				local UserId = textSource.UserId
-
-				if UserId then
-					local runningPlr = PlayersService:GetPlayerByUserId(UserId)
-
-					if runningPlr then
-						EasyAdmin.Commands:runCommand(runningPlr,string:sub(2))
-					end
-				end
-			end)
-		end
-	end
-
-	EasyAdmin.__initiated = os.clock()
-
-	script.Parent = nil
 	return EasyAdmin
 end

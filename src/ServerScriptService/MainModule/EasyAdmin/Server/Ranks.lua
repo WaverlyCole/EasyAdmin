@@ -135,6 +135,11 @@ return function(Context)
 		local determinedRank = math.max(table.unpack(foundRanks))
 				
 		self.__rankCache[UserId] = determinedRank
+
+		local Player = Context.PlayerUtils:ResolveToPlayer(Player)
+		if Player then
+			Context.Comm:SendTo(Player,"RankUpdated",determinedRank)
+		end
 		
 		return determinedRank
 	end
