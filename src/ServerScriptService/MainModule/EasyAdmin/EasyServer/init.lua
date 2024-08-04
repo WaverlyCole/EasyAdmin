@@ -120,8 +120,9 @@ return function(EasyAdmin)
 
 			if Command.Aliases then
 				for _,Alias in Command.Aliases do
-					local textChatCommandAlias = Instance.new("TextChatCommand",textChatCommand)
+					local textChatCommandAlias = Instance.new("TextChatCommand",CommandsFolder)
 					textChatCommandAlias.Name = Alias
+					textChatCommandAlias:SetAttribute("Rank",Command.Rank)
 					textChatCommandAlias.PrimaryAlias = "/"..Alias
 					connectTextChatCommand(textChatCommandAlias)
 				end
