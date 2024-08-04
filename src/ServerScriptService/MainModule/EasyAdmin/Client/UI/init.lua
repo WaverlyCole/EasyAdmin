@@ -13,6 +13,18 @@ return function(Context)
 	local TweenService = game:GetService("TweenService")
 	local UITweenInfo = TweenInfo.new(.25)
 	
+	function UI.new(UIType,Props)
+		local Constructor = script.Constructors:FindFirstChild(UIType)
+
+		if Constructor then
+			local obj = require(Constructor)(Context,Props)
+			obj:SetAttribute("UIType",UIType)
+			return obj
+		else
+			Context.warn("Could not find constructor for UI Type:", UIType)
+		end
+	end
+
 	function UI.newContentFrame(Name,RefreshCmd)
 		for _,v in UI.__activeContainers do
 			if v.Name == Name then
@@ -85,11 +97,9 @@ return function(Context)
 		return new
 	end
 	
-	Context.Comm:Hook("Confirmation",function(Data)
-		local newHint = script.Assets.Confirmation:Clone()
-		newHint.Main.Top.Title.Text = `Confirmation from <b>{Data.From or "System"}</b>`
-		newHint.Main.Content.Content.Text = Data.Text or ""
-		newHint.Size = UDim2.new(0,0,0,0)
+
+	function UI:Confirm(Props)
+		local newHint = self.new("Confirmation",Props)
 
 		local dismissed = false
 		local response = nil
@@ -102,12 +112,12 @@ return function(Context)
 			return nil
 		end
 		
-		if not Data.Time then
-			Data.Time = 15
+		if not Props.Time then
+			Props.Time = 15
 		end
 
-		if Data.Time then
-			local endTime = time() + Data.Time
+		if Props.Time then
+			local endTime = time() + Props.Time
 
 			local Conn;Conn = game:GetService("RunService").Stepped:Connect(function()
 				if dismissed then
@@ -131,10 +141,8 @@ return function(Context)
 		end
 
 		newHint.Parent = UI.SysUI.Prompts
-		--print(newHint.Content.Content.TextBounds.X,newHint.Top.Title.TextBounds.X)
 		
 		newHint:TweenSize(UDim2.new(0,math.max(newHint.Main.Content.Content.TextBounds.X + 35,newHint.Main.Top.Title.TextBounds.X + 85),0,newHint.Main.Content.Content.TextBounds.Y + 80),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
-		--newHint.Sound:Play()
 
 		newHint.Options.Confirm.Button.Activated:Connect(function()
 			response = true
@@ -149,18 +157,6 @@ return function(Context)
 		repeat task.wait() until dismissed
 		
 		return response
-	end)
-
-	function UI.new(UIType,Props)
-		local Constructor = script.Constructors:FindFirstChild(UIType)
-
-		if Constructor then
-			local obj = require(Constructor)(Context,Props)
-			obj:SetAttribute("UIType",UIType)
-			return obj
-		else
-			Context.warn("Could not find constructor for UI Type:", UIType)
-		end
 	end
 
 	function UI:Notify(Props)
@@ -247,6 +243,13 @@ return function(Context)
 		newNotificaiton:TweenSize(UDim2.new(0,math.max(newNotificaiton.Content.Content.TextBounds.X + 45,newNotificaiton.Top.Title.TextBounds.X + 85),0,65 + newNotificaiton.Content.Content.TextBounds.Y),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
 	end
 	
+	Context.Comm:Hook("Confirmation",function(Data)
+		Data.Title = `Confirmation from <b>{Data.From or "System"}</b>`
+		Data.From = nil
+
+		return UI:Confirm(Data)
+	end)
+
 	Context.Comm:Hook("Notify",function(Data)
 		Data.Title = `<b>{Data.From or "System"}</b>`
 		Data.From = nil

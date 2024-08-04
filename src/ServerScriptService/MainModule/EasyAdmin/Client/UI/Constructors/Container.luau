@@ -1,5 +1,6 @@
 return function(Context, Props)
     local newContainer = require(script.Parent.Base)(Context, Props)
+    newContainer.Position = UDim2.new(.01,0,.4,0)
     newContainer.Name = Props.Name or "Container"
     newContainer.Size = UDim2.new(0,250,0,300)
 
