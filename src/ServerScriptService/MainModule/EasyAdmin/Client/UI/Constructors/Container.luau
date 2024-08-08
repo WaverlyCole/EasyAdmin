@@ -4,9 +4,14 @@ return function(Context, Props)
     newContainer.Name = Props.Name or "Container"
     newContainer.Size = UDim2.new(0,250,0,300)
 
+    newContainer.Top.Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    newContainer.Top.Buttons.Search.Visible = true
+
     newContainer.Content:Destroy()
     local content = Instance.new("ScrollingFrame")
     content.Name = "Content"
+    content.BorderSizePixel = 0
     content.BackgroundTransparency = 1
     content.AnchorPoint = Vector2.new(.5,1)
     content.Position = UDim2.new(.5,0,1,-4)

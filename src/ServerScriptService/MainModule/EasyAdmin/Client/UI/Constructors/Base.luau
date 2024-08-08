@@ -21,7 +21,7 @@ return function(Context, Props)
     topBarTitle.TextColor3 = Color3.new(1,1,1)
     topBarTitle.AnchorPoint = Vector2.new(.5,.5)
     topBarTitle.Position = UDim2.new(.5,0,.5,0)
-    topBarTitle.Size = UDim2.new(.8,0,1,0)
+    topBarTitle.Size = UDim2.new(.95,0,1,0)
     topBarTitle.FontFace.Weight = Enum.FontWeight.Bold
     topBarTitle.BackgroundTransparency = 1
     topBarTitle.TextTransparency = .1
@@ -74,6 +74,47 @@ return function(Context, Props)
     closeButton.Image = "http://www.roblox.com/asset/?id=6415685859"
     closeButton.ImageTransparency = .1
     closeButton.Parent = closeButtonFrame
+
+    local searchButton = closeButtonFrame:Clone()
+    searchButton.Name = "Search"
+    searchButton.Button.Image = "rbxassetid://18863270326"
+    searchButton.Visible = false
+    searchButton.LayoutOrder = 997
+    searchButton.Parent = topBarButtons
+
+    local searchBar = Instance.new("TextBox")
+    searchBar.PlaceholderText = "Filter"
+    searchBar.ClearTextOnFocus = false
+    searchBar.Visible = false
+    searchBar.Name = "SearchBar"
+    searchBar.TextColor3 = Color3.new(1,1,1)
+    searchBar.AnchorPoint = Vector2.new(0,.5)
+    searchBar.Position = UDim2.new(.01,0,.5,0)
+    searchBar.Size = UDim2.new(.5,0,.8,0)
+    searchBar.FontFace.Weight = Enum.FontWeight.Bold
+    searchBar.BackgroundTransparency = .9
+    searchBar.Text = ""
+    searchBar.BackgroundColor3 = Color3.new(1,1,1)
+    searchBar.TextTransparency = .1
+    searchBar.RichText = true
+    searchBar.Parent = topBar
+
+    local searchBarRounded = groupCorner:Clone()
+    searchBarRounded.Parent = searchBar
+
+    searchButton.Button.Activated:Connect(function()
+        if searchBar.Visible then
+            searchBar.Visible = false
+            searchBar:ReleaseFocus ()
+            searchBar.Text = ""
+            topBarTitle.Visible = true
+        else
+            searchBar.Visible = true
+            searchBar:CaptureFocus()
+            topBarTitle.Visible = false
+        end
+    end)
+    
 
     local refreshButton = closeButtonFrame:Clone()
     refreshButton.Name = "Refresh"

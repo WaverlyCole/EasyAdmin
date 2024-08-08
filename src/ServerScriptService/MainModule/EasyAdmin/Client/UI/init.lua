@@ -4,6 +4,7 @@ return function(Context)
 	UI.PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui",math.huge)
 	UI.SysUI = script:WaitForChild("EasyAdminGui"):Clone()
 	UI.SysUI.Parent = UI.PlayerGui
+	UI.SysUI.IgnoreGuiInset = true
 	
 	UI.__activeContainers = {}
 	
@@ -12,6 +13,7 @@ return function(Context)
 		
 	local TweenService = game:GetService("TweenService")
 	local UITweenInfo = TweenInfo.new(.25)
+	local UITweenInfoSlower = TweenInfo.new(.5)
 	
 	function UI.new(UIType,Props)
 		local Constructor = script.Constructors:FindFirstChild(UIType)
@@ -47,10 +49,43 @@ return function(Context)
 		
 		local new = UI.new("Container",{Name = Name, Title = `<b> {Name} </b>`})
 		
+		local function filterContent(txt)
+			for _,Category in new.Content:GetChildren() do
+				if Category:GetAttribute("UIType") == "ContainerCategory" then
+					local showContent = false
+
+					if string.find(Category.TextLabel.Text:lower(),txt:lower()) or txt == "" then
+						showContent = true
+					end
+
+					for _,Label in Category.DropdownContent:GetChildren() do
+						if Label:GetAttribute("UIType") == "DropdownLabel" then
+							if string.find(Label.Text:lower(),txt:lower()) or txt == "" then
+								showContent = true
+								Label.Visible = true
+							else
+								Label.Visible = false
+							end
+						end
+					end
+
+					if showContent then
+						Category.Visible = true
+					else
+						Category.Visible = false
+					end
+				end
+			end
+		end
+
 		new.Top.Buttons.Close.Button.Activated:Connect(function()
 			table.remove(UI.__activeContainers,table.find(UI.__activeContainers,new))
 			Context.Comm:Send("ClosedContainer",Name)
 			new:Destroy()
+		end)
+
+		new.Top.SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
+			filterContent(new.Top.SearchBar.Text)
 		end)
 		
 		if RefreshCmd then
@@ -66,7 +101,7 @@ return function(Context)
 		new.Parent = UI.SysUI
 
 		table.insert(UI.__activeContainers,new)
-		
+	
 		return new
 	end
 	

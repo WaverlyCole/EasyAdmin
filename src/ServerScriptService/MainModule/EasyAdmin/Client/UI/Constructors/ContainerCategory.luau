@@ -114,7 +114,11 @@ return function(Context, Props)
         end
     end
     
-    dropdownContent.ChildAdded:Connect(updateDropdown)
+    dropdownContent.ChildAdded:Connect(function(a)
+        a.Changed:Connect(updateDropdown)
+
+        updateDropdown()
+    end)
     dropdownContent.ChildRemoved:Connect(updateDropdown)
 	
     return newCategory
