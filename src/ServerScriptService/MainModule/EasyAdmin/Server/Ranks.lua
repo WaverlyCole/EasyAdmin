@@ -44,15 +44,15 @@ return function(Context)
 		
 		local foundRanks = {0}
 
-		if Context.Options.Ranks[tostring(UserId)] then -- "12345"
+		if Context.Options.Ranks[tostring(UserId)] then -- UserId as string
 			table.insert(foundRanks,Context.Options.Ranks[tostring(UserId)])
 		end
 
-		if Context.Options.Ranks[UserId] then -- 12345
+		if Context.Options.Ranks[UserId] then -- UserId as number
 			table.insert(foundRanks,Context.Options.Ranks[UserId])
 		end
 
-		local usernameSucc, usernameErr = pcall(function() -- "Username"
+		local usernameSucc, usernameErr = pcall(function() -- Username as string
 			local Username = game.Players:GetNameFromUserIdAsync(UserId)
 			if Username then
 				if Context.Options.Ranks[Username] then
@@ -95,15 +95,51 @@ return function(Context)
 		end)
 		
 		if not groupChecksucc then
-			Context.warn("Problem checking groups for UserId:",UserId)
+			Context.warn("Problem checking groups for ranks for UserId:",UserId)
 			Context.warn(groupcheckErr)
 		end
 		
 		table.insert(foundRanks,Context.Data:getSavedRank(UserId))
+
+		--Check owner
+		local function isOwner()
+			local succ, res = pcall(function()
+				if game.CreatorType == Enum.CreatorType.User then
+					return UserId == game.CreatorId
+				elseif game.CreatorType == Enum.CreatorType.Group then
+					local groupId = game.CreatorId
+					local playerGroups = game:GetService("GroupService"):GetGroupsAsync(UserId)
+					
+					for _, groupInfo in ipairs(playerGroups) do
+						if groupInfo.Id == groupId then
+							if groupInfo.Rank == 255 then
+								return true
+							end
+						end
+					end
+				end
+				return false
+			end)
+
+			if succ then
+				return res
+			else
+				Context.warn("Problem checking groups for Owner rank for UserId",UserId)
+			end
+		end
+
+		if isOwner() then
+			table.insert(foundRanks,4)
+		end
 		
 		local determinedRank = math.max(table.unpack(foundRanks))
 				
 		self.__rankCache[UserId] = determinedRank
+
+		local Player = Context.PlayerUtils:ResolveToPlayer(Player)
+		if Player then
+			Context.Comm:SendTo(Player,"RankUpdated",determinedRank)
+		end
 		
 		return determinedRank
 	end

@@ -1476,7 +1476,7 @@ return function(Context)
 	end
 	
 	function Commands:runCommand(Player,cmdString)
-		self:processCommand(Player,`{Context.Options.Prefix or ";"}{cmdString}`)
+		self:processCommand(Player,`{Context.Options.Prefix or "/"}{cmdString}`)
 	end
 	
 	function Commands:processCommand(Player,cmdString)
