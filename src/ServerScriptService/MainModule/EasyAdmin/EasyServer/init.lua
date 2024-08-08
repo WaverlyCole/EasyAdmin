@@ -92,7 +92,7 @@ return function(EasyAdmin)
 	end
 
 	--// TextChatCommands
-	if EasyAdmin.Options.EnableTextChatCommands == true then
+	if EasyAdmin.Options.EnableTextChatCommands ~= false then -- Enabled by default
 		TextChatService:SetAttribute("TextChatCommandsEnabled", true)
 		local CommandsFolder = Instance.new("Folder",TextChatService)
 		CommandsFolder.Name = "EasyAdminCommands"
