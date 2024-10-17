@@ -31,7 +31,7 @@ return function(Context)
 		{
 			Name = "doll";
 			Aliases = {"playerdoll"};
-			Rank = 0;
+			Rank = 1;
 			Category = "Character";
 			Tags = {"Fun"},
 			Args = {
@@ -323,10 +323,14 @@ return function(Context)
 				},
 			};
 			Run = function(runningPlr,Args)
+				Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Args.Target.Name}'s GUIs will be shown shortly.`,Time = 5})
 				local uiData = Context.Comm:Invoke(Args.Target,"SerializeGuis")
 				
 				if uiData then
 					Context.Comm:SendTo(runningPlr,"DeserializeGuis",uiData)
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `Showing {Args.Target.Name}'s GUIs`,Time = 5})
+				else
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `Encountered an error tyring to serialize GUIs.`,Time = 5})
 				end
 			end;
 		},
@@ -413,7 +417,7 @@ return function(Context)
 		},
 		{
 			Name = "getping";
-			Aliases = {};
+			Aliases = {"ping"};
 			Rank = 1;
 			Category = "Util";
 			Args = {

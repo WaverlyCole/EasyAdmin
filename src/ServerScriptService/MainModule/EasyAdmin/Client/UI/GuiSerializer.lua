@@ -56,8 +56,8 @@ function GuiSerializer.Serialize(args)
 				Type = child.ClassName
 			}
 
-			for _, prop in ipairs(uiProps) do
-				pcall(function()
+			for _, prop in pairs(uiProps) do
+				local succ, err = pcall(function()
 					new.Props[prop] = child[prop]
 				end)
 			end
@@ -90,15 +90,17 @@ function GuiSerializer.Deserialize(data, parent)
 		local instance = Instance.new(tab.Type)
 
 		-- Set properties from tab.Properties
-		for propName, propValue in pairs(tab.Props) do
-			instance[propName] = propValue
+		for propName, propValue in tab.Props do
+			local succ, err = pcall(function()
+				instance[propName] = propValue
+			end)
 		end
 
 		-- Set Parent
 		instance.Parent = parent
 
 		-- Recursively deserialize children
-		for _, childData in ipairs(tab.Children) do
+		for _, childData in tab.Children do
 			deserialize(childData, instance)
 		end
 
@@ -107,7 +109,7 @@ function GuiSerializer.Deserialize(data, parent)
 	end
 
 	-- Start deserialization with the provided data
-	for _, childData in ipairs(data.Children) do
+	for _, childData in data.Children do
 		deserialize(childData, Folder)
 	end
 	
