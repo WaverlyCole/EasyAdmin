@@ -87,6 +87,14 @@ return function(Context)
 		new.Top.SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
 			filterContent(new.Top.SearchBar.Text)
 		end)
+
+		new.Content.ChildAdded:Connect(function()
+			filterContent(new.Top.SearchBar.Text)
+		end)
+
+		new.Content.ChildRemoved:Connect(function()
+			filterContent(new.Top.SearchBar.Text)
+		end)
 		
 		if RefreshCmd then
 			new.Top.Buttons.Refresh.Visible = true
