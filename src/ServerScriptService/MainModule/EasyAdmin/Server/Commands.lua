@@ -327,6 +327,7 @@ return function(Context)
 				local uiData = Context.Comm:Invoke(Args.Target,"SerializeGuis")
 				
 				if uiData then
+					uiData.Text = `{Args.Target.Name}'s GUIs`
 					Context.Comm:SendTo(runningPlr,"DeserializeGuis",uiData)
 					Context.Comm:SendTo(runningPlr,"Notify",{Text = `Showing {Args.Target.Name}'s GUIs`,Time = 5})
 				else

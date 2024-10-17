@@ -1,9 +1,11 @@
 local GuiSerializer = {}
 
+GuiSerializer.DefaultProps = {}
+
 function GuiSerializer.Serialize(args)
 	local uiProps = {
 		"BottomImage", "AnchorPoint",
-		"CornerRadius", "CanvasSize", "CanvasPosition", "ElasticBehavior", "Name", "Archivable", "SelectionImageObject", "BackgroundColor3",
+		"CornerRadius", "CanvasSize", "CanvasPosition", "ElasticBehavior", "Archivable", "SelectionImageObject", "BackgroundColor3",
 		"BackgroundTransparency", "BorderColor3", "BorderSizePixel", "Position", "Rotation",
 		"RichText", "Selectable", "HorizontalScrollBarPosition", "Size", "Enabled", "Active",
 		"SizeConstraint", "Style", "ScrollBarThickness", "ScrollBarImageTransparency",
@@ -21,7 +23,7 @@ function GuiSerializer.Serialize(args)
 		"HorizontalAlignment", "MaxTextSize", "MinTextSize", "GroupColor3", "GroupTransparency",
 		"SelectionImageObject", "LayoutOrder","LineHeight",
 		"Ambient", "LightColor", "LightDirection", "CurrentCamera", "AutomaticSize", "AutoLocalize",
-		"RootLocalizationTable","BorderMode","BorderSizePixel"
+		"RootLocalizationTable", "BorderMode", "BorderSizePixel", "IgnoreGuiInset"
 	}
 
 	local uiClasses = {
@@ -33,11 +35,7 @@ function GuiSerializer.Serialize(args)
 	}
 
 	local Guis = {
-		Type = "Folder",
-		Props = {
-			Name = "Guis",
-		},
-		Children = {}
+		C = {} -- Children
 	}
 
 	local function serialize(tab, child)
@@ -51,14 +49,29 @@ function GuiSerializer.Serialize(args)
 
 		if isValidClass then
 			local new = {
-				Props = {},
-				Children = {},
-				Type = child.ClassName
+				P = {}, -- Props
+				C = {}, -- Children
+				T = child.ClassName -- Type
 			}
+
+			if not GuiSerializer.DefaultProps[child.ClassName] then
+				GuiSerializer.DefaultProps[child.ClassName] = {}
+				local newObj = Instance.new(child.ClassName)
+
+				for _, prop in pairs(uiProps) do
+					pcall(function()
+						GuiSerializer.DefaultProps[child.ClassName][prop] = newObj[prop]
+					end)
+				end
+
+				newObj:Destroy()
+			end
 
 			for _, prop in pairs(uiProps) do
 				local succ, err = pcall(function()
-					new.Props[prop] = child[prop]
+					--if child[prop] ~= GuiSerializer.DefaultProps[child.ClassName][prop] then --Idk whenever i enable this sometimes TextTransparency doesnt apply properly
+						new.P[prop] = child[prop]
+					--end
 				end)
 			end
 
@@ -68,7 +81,7 @@ function GuiSerializer.Serialize(args)
 			end
 
 			-- Add the constructed GUI data to the parent's children list
-			table.insert(tab.Children, new)
+			table.insert(tab.C, new)
 		end
 	end
 
@@ -81,16 +94,16 @@ function GuiSerializer.Serialize(args)
 	return Guis
 end
 
-function GuiSerializer.Deserialize(data, parent)
+function GuiSerializer.Deserialize(data)
 	local Folder = Instance.new("Folder")
 
 	-- Create a function to recursively deserialize GUI data
 	local function deserialize(tab, parent)
 		-- Create a new instance based on tab.Properties
-		local instance = Instance.new(tab.Type)
+		local instance = Instance.new(tab.T == "ScreenGui" and "Folder" or tab.T)
 
 		-- Set properties from tab.Properties
-		for propName, propValue in tab.Props do
+		for propName, propValue in pairs(tab.P) do
 			local succ, err = pcall(function()
 				instance[propName] = propValue
 			end)
@@ -100,16 +113,15 @@ function GuiSerializer.Deserialize(data, parent)
 		instance.Parent = parent
 
 		-- Recursively deserialize children
-		for _, childData in tab.Children do
+		for _, childData in ipairs(tab.C) do
 			deserialize(childData, instance)
 		end
 
-		task.wait()
 		return instance
 	end
 
 	-- Start deserialization with the provided data
-	for _, childData in data.Children do
+	for _, childData in ipairs(data.C) do
 		deserialize(childData, Folder)
 	end
 	

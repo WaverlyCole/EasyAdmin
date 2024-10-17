@@ -89,11 +89,15 @@ return function(Context)
 		end)
 
 		new.Content.ChildAdded:Connect(function()
-			filterContent(new.Top.SearchBar.Text)
+			if new:FindFirstChild("Top") then
+				filterContent(new.Top.SearchBar.Text)
+			end
 		end)
 
 		new.Content.ChildRemoved:Connect(function()
-			filterContent(new.Top.SearchBar.Text)
+			if new:FindFirstChild("Top") then
+				filterContent(new.Top.SearchBar.Text)
+			end
 		end)
 		
 		if RefreshCmd then
@@ -420,10 +424,21 @@ return function(Context)
 	Context.Comm:Hook("DeserializeGuis",function(Data)
 		local main = UI.GuiSerializer.Deserialize(Data)
 		
-		main.Parent = UI.SysUI
-		task.wait(5)
-		main:Destroy()
+		local newContainer = UI.new("Base",{Title = Data.Text or "ShowGuis"})
+		newContainer.AnchorPoint = Vector2.new(.5,.5)
+		newContainer.Position = UDim2.fromScale(.5,.5)
+		newContainer.Size = UDim2.fromScale(.7,.7)
+		newContainer.ZIndex = 999
+
+		main.Parent = newContainer.Content
+		newContainer.Parent = UI.SysUI
 		
+		local function dismiss()
+			newContainer:Destroy()
+		end
+		
+		newContainer.Top.Buttons.Close.Button.Activated:Connect(dismiss)
+
 		return true
 	end)
 	
