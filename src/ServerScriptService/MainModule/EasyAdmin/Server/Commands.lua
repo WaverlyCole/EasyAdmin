@@ -1454,6 +1454,8 @@ return function(Context)
 			end
 		elseif argType == "string" then
 			return table.concat(remainingArgs, " ")
+		elseif argType == "shortstring" then
+			return argString
 		elseif argType == "time" then
 			local timeReturned,err = Context.Util:interpretTimeString(argString)
 			
