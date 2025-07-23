@@ -524,9 +524,9 @@ return function(Context)
 					
 					if response == true then
 						game:GetService("MessagingService"):PublishAsync("GlobalAlert", messageData)
-						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification sent.`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global alert sent.`,Time = 10})
 					else
-						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification cancelled.`,Time = 10})
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global alert cancelled.`,Time = 10})
 					end
 			end;
 			Init = function()
