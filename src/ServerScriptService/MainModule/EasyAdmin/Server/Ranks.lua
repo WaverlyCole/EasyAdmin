@@ -128,7 +128,7 @@ return function(Context)
 			end
 		end
 
-		if Context.Options.DisableOwnerAdmin ~= false then
+		if Context.Options.DisableOwnerAdmin ~= true then
 			if isOwner() then
 				table.insert(foundRanks,4)
 			end
