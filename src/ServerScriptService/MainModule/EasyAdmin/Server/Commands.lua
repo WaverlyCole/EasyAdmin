@@ -175,7 +175,7 @@ return function(Context)
 		{
 			Name = "commands";
 			Aliases = {"cmds","listcmds","listcommands"};
-			Rank = 1;
+			Rank = 0;
 			Category = "System";
 			Args = {};
 			Run = function(runningPlr,Args)
@@ -924,7 +924,7 @@ return function(Context)
 		{
 			Name = "getrank";
 			Aliases = {"viewrank","rank"};
-			Rank = 0;
+			Rank = 1;
 			Category = "System";
 			Args = {
 				{
