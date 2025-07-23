@@ -179,6 +179,7 @@ return function(Context)
 			Category = "System";
 			Args = {};
 			Run = function(runningPlr,Args)
+				local runningRank = Context.Ranks:Get(runningPlr)
 				local tbl = {}
 				
 				local stringifyArgs = function(tbl)
@@ -192,6 +193,12 @@ return function(Context)
 				end
 				
 				for i,Command in Commands:Get() do
+					if Command.Rank then -- Insufficient rank
+						if runningRank < Command.Rank then
+							continue
+						end
+					end
+
 					if not tbl[Command.Category] then
 						tbl[Command.Category] = {}
 					end
@@ -1488,6 +1495,7 @@ return function(Context)
 	
 	function Commands:processCommand(Player,cmdString)
 		local globalPrefix = Context.Options.Prefix or ";"
+		local runningRank = Context.Ranks:Get(Player)
 
 		if string.sub(cmdString, 1, 1) == globalPrefix then
 			cmdString = string.sub(cmdString, 2)
@@ -1497,6 +1505,12 @@ return function(Context)
 
 			for _, Command in ipairs(self.Commands) do
 				if Command.Disabled then continue end -- Skip disabled commands
+
+				if Command.Rank then -- Insufficient rank
+					if runningRank < Command.Rank then
+						continue
+					end
+				end
 
 				local runCommand = false
 
