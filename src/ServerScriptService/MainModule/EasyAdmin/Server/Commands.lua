@@ -96,7 +96,7 @@ return function(Context)
 		{
 			Name = "charsize";
 			Aliases = {"playersize","size","scale"};
-			Rank = 0;
+			Rank = 1;
 			Category = "Character";
 			Tags = {"Fun"},
 			Args = {
