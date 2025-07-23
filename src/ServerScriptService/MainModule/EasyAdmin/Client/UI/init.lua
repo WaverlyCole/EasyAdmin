@@ -206,6 +206,27 @@ return function(Context)
 		return response
 	end
 
+	function UI:Alert(Props)
+		local newHint = self.new("Alert",Props)
+
+		local function dismiss()
+			newHint:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+			task.wait(.1)
+			newHint:Destroy()
+			return nil
+		end
+
+		newHint.Parent = UI.SysUI.Prompts
+		
+		newHint:TweenSize(UDim2.new(0,math.max(newHint.Main.Content.Content.TextBounds.X + 35,newHint.Main.Top.Title.TextBounds.X + 85),0,newHint.Main.Content.Content.TextBounds.Y + 80),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+
+		newHint.Options.Confirm.Button.Activated:Connect(function()
+			dismiss()
+		end)
+		
+		return
+	end
+
 	function UI:Notify(Props)
 		local newNotificaiton = self.new("Notification",Props)
 		local dismissed = false
@@ -295,6 +316,13 @@ return function(Context)
 		Data.From = nil
 
 		return UI:Confirm(Data)
+	end)
+
+	Context.Comm:Hook("Alert",function(Data)
+		Data.Title = `Alert from <b>{Data.From or "System"}</b>`
+		Data.From = nil
+
+		return UI:Alert(Data)
 	end)
 
 	Context.Comm:Hook("Notify",function(Data)

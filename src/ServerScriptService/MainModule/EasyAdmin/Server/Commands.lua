@@ -465,13 +465,84 @@ return function(Context)
 						local response = Context.Comm:Invoke(Player,"Confirmation",{From = runningPlr.Name,Text = msg,Time = 15})
 						
 						if response == true then
-							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' confirmed!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name} confirmed!`,Time = 10})
 						elseif response == false then
-							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' denied!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name} denied!`,Time = 10})
 						elseif response == nil then
-							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' did not respond!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name} did not respond!`,Time = 10})
 						end
 					end)
+				end
+			end;
+		},
+		{
+			Name = "alert";
+			Aliases = {};
+			Rank = 1;
+			Category = "System";
+			Args = {
+				{
+					Name = "Targets";
+					Display = "Player(s)";
+					Type = "players";
+				},
+				{
+					Name = "Message";
+					Display = "Message";
+					Type = "string";
+				},
+			};
+			Run = function(runningPlr,Args)
+				for _,Player in Args.Targets do
+					task.spawn(function()
+						local msg = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Player.UserId)
+						Context.Comm:Invoke(Player,"Alert",{From = runningPlr.Name,Text = msg})
+					end)
+				end
+			end;
+		},
+
+		{
+			Name = "globalalert";
+			Aliases = {"galert"};
+			Rank = 2;
+			Category = "System";
+			Args = {
+				{
+					Name = "Message";
+					Type = "string";
+				}
+			};
+			Run = function(runningPlr,Args)
+					local messageData = {
+						From = runningPlr.Name,
+						Message = Context.Text:FilterBroadcast(Args.Message,runningPlr.UserId),
+						UserId = runningPlr.UserId
+					}
+
+					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Confirm global alert?\n\n {messageData.Message}`,Time = 15})
+					
+					if response == true then
+						game:GetService("MessagingService"):PublishAsync("GlobalAlert", messageData)
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification sent.`,Time = 10})
+					else
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification cancelled.`,Time = 10})
+					end
+			end;
+			Init = function()
+				local success, err = pcall(function()
+					game:GetService("MessagingService"):SubscribeAsync("GlobalAlert", function(data)
+						local payload = data.Data
+						if typeof(payload) == "table" and payload.Message and payload.From and payload.UserId then
+							for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+								Context.Comm:SendTo(Plr, "Alert", { Text = payload.Message, Time = 15, From = `{payload.From} (Global)` })
+							end
+						end
+					end)
+				end)
+
+				if not success then
+					warn("[GlobalNotify] Failed to subscribe: " .. tostring(err))
 				end
 			end;
 		},
