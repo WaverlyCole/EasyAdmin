@@ -1343,7 +1343,7 @@ return function(Context)
 		{
 			Name = "globalnotify";
 			Aliases = {"gh","ghint","gn","gnotif"};
-			Rank = 1;
+			Rank = 2;
 			Category = "System";
 			Args = {
 				{
@@ -1410,7 +1410,7 @@ return function(Context)
 		{
 			Name = "globalmessage";
 			Aliases = {"gm","gmessage","gmsg"};
-			Rank = 1;
+			Rank = 2;
 			Category = "System";
 			Args = {
 				{
