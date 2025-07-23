@@ -1354,7 +1354,7 @@ return function(Context)
 			Run = function(runningPlr,Args)
 					local messageData = {
 						From = runningPlr.Name,
-						Message = Context.Text:FilterFor(Args.Message,runningPlr.UserId,runningPlr.UserId),
+						Message = Context.Text:FilterBroadcast(Args.Message,runningPlr.UserId),
 						UserId = runningPlr.UserId
 					}
 
@@ -1421,7 +1421,7 @@ return function(Context)
 			Run = function(runningPlr,Args)
 					local messageData = {
 						From = runningPlr.Name,
-						Message = Context.Text:FilterFor(Args.Message,runningPlr.UserId,runningPlr.UserId),
+						Message = Context.Text:FilterBroadcast(Args.Message,runningPlr.UserId),
 						UserId = runningPlr.UserId
 					}
 
