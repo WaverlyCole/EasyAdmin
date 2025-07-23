@@ -14,35 +14,47 @@ if IsServer then
 	Network._remote.Parent = script
 
 	Network._remote.OnServerInvoke = function(Player, hookName, ...)
-		if Network._hooks[hookName] then
-			local results = {}
-			for _, hook in pairs(Network._hooks[hookName]) do
-				local success, result = pcall(hook, Player, ...)
-				if success then
-					table.insert(results, result)
-				else
-					warn("Error in hook " .. hookName .. ": " .. result)
+		local payload = {...}
+
+		local succ,res = pcall(function()
+			if Network._hooks[hookName] then
+				local results = {}
+				for _, hook in pairs(Network._hooks[hookName]) do
+					local success, result = pcall(hook, Player, unpack(payload))
+					if success then
+						table.insert(results, result)
+					else
+						warn("Error in hook " .. hookName .. ": " .. result)
+					end
 				end
+				return unpack(results)
 			end
-			return unpack(results)
-		end
+		end)
+
+		if succ then return res else return nil end
 	end
 elseif IsClient then
 	Network._remote = script:WaitForChild("Main",math.huge)
 
 	Network._remote.OnClientInvoke = function(hookName, ...)
-		if Network._hooks[hookName] then
-			local results = {}
-			for _, hook in pairs(Network._hooks[hookName]) do
-				local success, result = pcall(hook, ...)
-				if success then
-					table.insert(results, result)
-				else
-					warn("Error in hook " .. hookName .. ": " .. result)
+		local payload = {...}
+
+		local succ,res = pcall(function()
+			if Network._hooks[hookName] then
+				local results = {}
+				for _, hook in pairs(Network._hooks[hookName]) do
+					local success, result = pcall(hook, unpack(payload))
+					if success then
+						table.insert(results, result)
+					else
+						warn("Error in hook " .. hookName .. ": " .. result)
+					end
 				end
+				return unpack(results)
 			end
-			return unpack(results)
-		end
+		end)
+
+		if succ then return res else return nil end
 	end
 end
 
@@ -52,7 +64,7 @@ function Network:generateHook()
 end
 
 function Network:Unhook(hookName, hookID)
-	if self._hooks[hookName] then
+	if self._hooks[hookName] and hookID then
 		self._hooks[hookName][hookID] = nil
 		if Debug then print(`"Network {IsServer and "Server" or "Client"} unregistered {hookName}({hookID})`) end
 		if next(self._hooks[hookName]) == nil then
@@ -72,7 +84,7 @@ function Network:Hook(hookName, hookRun)
 	
 	local newHook = {}
 	newHook.Name = hookName
-	newHook.Id = hookName
+	newHook.Id = hookID
 	newHook._run = hookRun
 	
 	function newHook:Disconnect()
@@ -99,7 +111,11 @@ function Network:SendAwait(...)
 	if IsClient then
 		return self._remote:InvokeServer(unpack(Args))
 	else
-		return self._remote:InvokeClient(table.remove(Args, 1), unpack(Args))
+		local succ,res = pcall(function()
+			return self._remote:InvokeClient(table.remove(Args, 1), unpack(Args))
+		end)
+
+		if succ then return res else return nil end
 	end
 end
 
@@ -130,7 +146,11 @@ function Network:SendTo(plrsTbl, ...)
 
 	for _, Plr in ipairs(plrsTbl) do
 		task.spawn(function()
-			self._remote:InvokeClient(Plr, unpack(Args))
+			local succ,res = pcall(function()
+				return self._remote:InvokeClient(Plr, unpack(Args))
+			end)
+
+			if succ then return res else return nil end
 		end)
 	end
 

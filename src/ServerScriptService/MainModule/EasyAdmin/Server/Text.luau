@@ -12,6 +12,7 @@ return function(Context)
 
 		if not success then
 			Context.warn("Error filtering text:", Text, ":", returned)
+			return ""
 		else
 			return returned:GetNonChatStringForBroadcastAsync()
 		end
@@ -27,6 +28,7 @@ return function(Context)
 
 		if not success then
 			Context.warn("Error filtering text:", Text, ":", returned)
+			return ""
 		else
 			return returned:GetNonChatStringForUserAsync(toPlayerId)
 		end

@@ -87,6 +87,18 @@ return function(Context)
 		new.Top.SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
 			filterContent(new.Top.SearchBar.Text)
 		end)
+
+		new.Content.ChildAdded:Connect(function()
+			if new:FindFirstChild("Top") then
+				filterContent(new.Top.SearchBar.Text)
+			end
+		end)
+
+		new.Content.ChildRemoved:Connect(function()
+			if new:FindFirstChild("Top") then
+				filterContent(new.Top.SearchBar.Text)
+			end
+		end)
 		
 		if RefreshCmd then
 			new.Top.Buttons.Refresh.Visible = true
@@ -194,6 +206,27 @@ return function(Context)
 		return response
 	end
 
+	function UI:Alert(Props)
+		local newHint = self.new("Alert",Props)
+
+		local function dismiss()
+			newHint:TweenSize(UDim2.new(0,0,0,0),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+			task.wait(.1)
+			newHint:Destroy()
+			return nil
+		end
+
+		newHint.Parent = UI.SysUI.Prompts
+		
+		newHint:TweenSize(UDim2.new(0,math.max(newHint.Main.Content.Content.TextBounds.X + 35,newHint.Main.Top.Title.TextBounds.X + 85),0,newHint.Main.Content.Content.TextBounds.Y + 80),Enum.EasingDirection.In,Enum.EasingStyle.Linear,.1)
+
+		newHint.Options.Confirm.Button.Activated:Connect(function()
+			dismiss()
+		end)
+		
+		return
+	end
+
 	function UI:Notify(Props)
 		local newNotificaiton = self.new("Notification",Props)
 		local dismissed = false
@@ -283,6 +316,13 @@ return function(Context)
 		Data.From = nil
 
 		return UI:Confirm(Data)
+	end)
+
+	Context.Comm:Hook("Alert",function(Data)
+		Data.Title = `Alert from <b>{Data.From or "System"}</b>`
+		Data.From = nil
+
+		return UI:Alert(Data)
 	end)
 
 	Context.Comm:Hook("Notify",function(Data)
@@ -412,10 +452,21 @@ return function(Context)
 	Context.Comm:Hook("DeserializeGuis",function(Data)
 		local main = UI.GuiSerializer.Deserialize(Data)
 		
-		main.Parent = UI.SysUI
-		task.wait(5)
-		main:Destroy()
+		local newContainer = UI.new("Base",{Title = Data.Text or "ShowGuis"})
+		newContainer.AnchorPoint = Vector2.new(.5,.5)
+		newContainer.Position = UDim2.fromScale(.5,.5)
+		newContainer.Size = UDim2.fromScale(.7,.7)
+		newContainer.ZIndex = 999
+
+		main.Parent = newContainer.Content
+		newContainer.Parent = UI.SysUI
 		
+		local function dismiss()
+			newContainer:Destroy()
+		end
+		
+		newContainer.Top.Buttons.Close.Button.Activated:Connect(dismiss)
+
 		return true
 	end)
 	

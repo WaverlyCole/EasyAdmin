@@ -31,7 +31,7 @@ return function(Context)
 		{
 			Name = "doll";
 			Aliases = {"playerdoll"};
-			Rank = 0;
+			Rank = 1;
 			Category = "Character";
 			Tags = {"Fun"},
 			Args = {
@@ -96,7 +96,7 @@ return function(Context)
 		{
 			Name = "charsize";
 			Aliases = {"playersize","size","scale"};
-			Rank = 0;
+			Rank = 1;
 			Category = "Character";
 			Tags = {"Fun"},
 			Args = {
@@ -175,10 +175,11 @@ return function(Context)
 		{
 			Name = "commands";
 			Aliases = {"cmds","listcmds","listcommands"};
-			Rank = 1;
+			Rank = 0;
 			Category = "System";
 			Args = {};
 			Run = function(runningPlr,Args)
+				local runningRank = Context.Ranks:Get(runningPlr)
 				local tbl = {}
 				
 				local stringifyArgs = function(tbl)
@@ -192,6 +193,12 @@ return function(Context)
 				end
 				
 				for i,Command in Commands:Get() do
+					if Command.Rank then -- Insufficient rank
+						if runningRank < Command.Rank then
+							continue
+						end
+					end
+
 					if not tbl[Command.Category] then
 						tbl[Command.Category] = {}
 					end
@@ -323,10 +330,15 @@ return function(Context)
 				},
 			};
 			Run = function(runningPlr,Args)
+				Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Args.Target.Name}'s GUIs will be shown shortly.`,Time = 5})
 				local uiData = Context.Comm:Invoke(Args.Target,"SerializeGuis")
 				
 				if uiData then
+					uiData.Text = `{Args.Target.Name}'s GUIs`
 					Context.Comm:SendTo(runningPlr,"DeserializeGuis",uiData)
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `Showing {Args.Target.Name}'s GUIs`,Time = 5})
+				else
+					Context.Comm:SendTo(runningPlr,"Notify",{Text = `Encountered an error tyring to serialize GUIs.`,Time = 5})
 				end
 			end;
 		},
@@ -413,7 +425,7 @@ return function(Context)
 		},
 		{
 			Name = "getping";
-			Aliases = {};
+			Aliases = {"ping"};
 			Rank = 1;
 			Category = "Util";
 			Args = {
@@ -453,13 +465,84 @@ return function(Context)
 						local response = Context.Comm:Invoke(Player,"Confirmation",{From = runningPlr.Name,Text = msg,Time = 15})
 						
 						if response == true then
-							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' confirmed!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name} confirmed!`,Time = 10})
 						elseif response == false then
-							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' denied!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name} denied!`,Time = 10})
 						elseif response == nil then
-							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name}' did not respond!`,Time = 10})
+							Context.Comm:SendTo(runningPlr,"Notify",{Text = `{Player.Name} did not respond!`,Time = 10})
 						end
 					end)
+				end
+			end;
+		},
+		{
+			Name = "alert";
+			Aliases = {};
+			Rank = 1;
+			Category = "System";
+			Args = {
+				{
+					Name = "Targets";
+					Display = "Player(s)";
+					Type = "players";
+				},
+				{
+					Name = "Message";
+					Display = "Message";
+					Type = "string";
+				},
+			};
+			Run = function(runningPlr,Args)
+				for _,Player in Args.Targets do
+					task.spawn(function()
+						local msg = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Player.UserId)
+						Context.Comm:Invoke(Player,"Alert",{From = runningPlr.Name,Text = msg})
+					end)
+				end
+			end;
+		},
+
+		{
+			Name = "globalalert";
+			Aliases = {"galert"};
+			Rank = 2;
+			Category = "System";
+			Args = {
+				{
+					Name = "Message";
+					Type = "string";
+				}
+			};
+			Run = function(runningPlr,Args)
+					local messageData = {
+						From = runningPlr.Name,
+						Message = Context.Text:FilterBroadcast(Args.Message,runningPlr.UserId),
+						UserId = runningPlr.UserId
+					}
+
+					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Confirm global alert?\n\n {messageData.Message}`,Time = 15})
+					
+					if response == true then
+						game:GetService("MessagingService"):PublishAsync("GlobalAlert", messageData)
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global alert sent.`,Time = 10})
+					else
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global alert cancelled.`,Time = 10})
+					end
+			end;
+			Init = function()
+				local success, err = pcall(function()
+					game:GetService("MessagingService"):SubscribeAsync("GlobalAlert", function(data)
+						local payload = data.Data
+						if typeof(payload) == "table" and payload.Message and payload.From and payload.UserId then
+							for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+								Context.Comm:SendTo(Plr, "Alert", { Text = payload.Message, Time = 15, From = `{payload.From} (Global)` })
+							end
+						end
+					end)
+				end)
+
+				if not success then
+					warn("[GlobalNotify] Failed to subscribe: " .. tostring(err))
 				end
 			end;
 		},
@@ -912,7 +995,7 @@ return function(Context)
 		{
 			Name = "getrank";
 			Aliases = {"viewrank","rank"};
-			Rank = 0;
+			Rank = 1;
 			Category = "System";
 			Args = {
 				{
@@ -1329,8 +1412,52 @@ return function(Context)
 			end;
 		},
 		{
+			Name = "globalnotify";
+			Aliases = {"gh","ghint","gn","gnotif"};
+			Rank = 2;
+			Category = "System";
+			Args = {
+				{
+					Name = "Message";
+					Type = "string";
+				}
+			};
+			Run = function(runningPlr,Args)
+					local messageData = {
+						From = runningPlr.Name,
+						Message = Context.Text:FilterBroadcast(Args.Message,runningPlr.UserId),
+						UserId = runningPlr.UserId
+					}
+
+					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Confirm global notification?\n\n {messageData.Message}`,Time = 15})
+					
+					if response == true then
+						game:GetService("MessagingService"):PublishAsync("GlobalNotify", messageData)
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification sent.`,Time = 10})
+					else
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification cancelled.`,Time = 10})
+					end
+			end;
+			Init = function()
+				local success, err = pcall(function()
+					game:GetService("MessagingService"):SubscribeAsync("GlobalNotify", function(data)
+						local payload = data.Data
+						if typeof(payload) == "table" and payload.Message and payload.From and payload.UserId then
+							for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+								Context.Comm:SendTo(Plr, "Notify", { Text = payload.Message, Time = 15, From = `{payload.From} (Global)` })
+							end
+						end
+					end)
+				end)
+
+				if not success then
+					warn("[GlobalNotify] Failed to subscribe: " .. tostring(err))
+				end
+			end;
+		},
+		{
 			Name = "message";
-			Aliases = {"m"};
+			Aliases = {"m","msg"};
 			Rank = 1;
 			Category = "System";
 			Args = {
@@ -1348,6 +1475,50 @@ return function(Context)
 				for _,Plr in Args.Targets do
 					local filteredText = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Plr.UserId)
 					Context.Comm:SendTo(Plr,"Message",{Text = filteredText,Time = 30,From = runningPlr.Name})
+				end
+			end;
+		},
+		{
+			Name = "globalmessage";
+			Aliases = {"gm","gmessage","gmsg"};
+			Rank = 2;
+			Category = "System";
+			Args = {
+				{
+					Name = "Message";
+					Type = "string";
+				}
+			};
+			Run = function(runningPlr,Args)
+					local messageData = {
+						From = runningPlr.Name,
+						Message = Context.Text:FilterBroadcast(Args.Message,runningPlr.UserId),
+						UserId = runningPlr.UserId
+					}
+
+					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Confirm global message?\n\n {messageData.Message}`,Time = 15})
+					
+					if response == true then
+						game:GetService("MessagingService"):PublishAsync("GlobalMessage", messageData)
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification sent.`,Time = 10})
+					else
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification cancelled.`,Time = 10})
+					end
+			end;
+			Init = function()
+				local success, err = pcall(function()
+					game:GetService("MessagingService"):SubscribeAsync("GlobalMessage", function(data)
+						local payload = data.Data
+						if typeof(payload) == "table" and payload.Message and payload.From and payload.UserId then
+							for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+								Context.Comm:SendTo(Plr, "Message", { Text = payload.Message, Time = 15, From = `{payload.From} (Global)` })
+							end
+						end
+					end)
+				end)
+
+				if not success then
+					warn("[GlobalMessage] Failed to subscribe: " .. tostring(err))
 				end
 			end;
 		},
@@ -1449,6 +1620,8 @@ return function(Context)
 			end
 		elseif argType == "string" then
 			return table.concat(remainingArgs, " ")
+		elseif argType == "shortstring" then
+			return argString
 		elseif argType == "time" then
 			local timeReturned,err = Context.Util:interpretTimeString(argString)
 			
@@ -1481,6 +1654,7 @@ return function(Context)
 	
 	function Commands:processCommand(Player,cmdString)
 		local globalPrefix = Context.Options.Prefix or ";"
+		local runningRank = Context.Ranks:Get(Player)
 
 		if string.sub(cmdString, 1, 1) == globalPrefix then
 			cmdString = string.sub(cmdString, 2)
@@ -1490,6 +1664,12 @@ return function(Context)
 
 			for _, Command in ipairs(self.Commands) do
 				if Command.Disabled then continue end -- Skip disabled commands
+
+				if Command.Rank then -- Insufficient rank
+					if runningRank < Command.Rank then
+						continue
+					end
+				end
 
 				local runCommand = false
 
@@ -1526,12 +1706,16 @@ return function(Context)
 			end
 		end
 	end
-	
+
 	function Commands:registerCommand(newCommand)
 		table.insert(Commands.Commands,newCommand)
 
 		if self:hasTag(newCommand,"Fun") and Context.Options.DisableFunCommands == true then
 			newCommand.Disabled = true
+		else
+			if newCommand.Init then
+				task.spawn(newCommand.Init)
+			end
 		end
 	end
 
@@ -1586,6 +1770,12 @@ return function(Context)
 		-- Disable fun commands
 		if Context.Options.DisableFunCommands then
 			Commands:disableTagged("Fun")
+		end
+		-- Init commands that need it
+		for _,Command in Commands.Commands do
+			if Command.Init then
+				task.spawn(Command.Init)
+			end
 		end
 	end
 
