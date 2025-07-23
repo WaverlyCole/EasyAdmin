@@ -128,8 +128,10 @@ return function(Context)
 			end
 		end
 
-		if isOwner() then
-			table.insert(foundRanks,4)
+		if Context.Options.DisableOwnerAdmin ~= false then
+			if isOwner() then
+				table.insert(foundRanks,4)
+			end
 		end
 		
 		local determinedRank = math.max(table.unpack(foundRanks))
