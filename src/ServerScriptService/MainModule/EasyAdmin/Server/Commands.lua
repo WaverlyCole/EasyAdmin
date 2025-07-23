@@ -1341,8 +1341,52 @@ return function(Context)
 			end;
 		},
 		{
+			Name = "globalnotify";
+			Aliases = {"gh","ghint","gn","gnotif"};
+			Rank = 1;
+			Category = "System";
+			Args = {
+				{
+					Name = "Message";
+					Type = "string";
+				}
+			};
+			Run = function(runningPlr,Args)
+					local messageData = {
+						From = runningPlr.Name,
+						Message = Context.Text:FilterFor(Args.Message,runningPlr.UserId,runningPlr.UserId),
+						UserId = runningPlr.UserId
+					}
+
+					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Confirm global notification?\n\n {messageData.Message}`,Time = 15})
+					
+					if response == true then
+						game:GetService("MessagingService"):PublishAsync("GlobalNotify", messageData)
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification sent.`,Time = 10})
+					else
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification cancelled.`,Time = 10})
+					end
+			end;
+			Init = function()
+				local success, err = pcall(function()
+					game:GetService("MessagingService"):SubscribeAsync("GlobalNotify", function(data)
+						local payload = data.Data
+						if typeof(payload) == "table" and payload.Message and payload.From and payload.UserId then
+							for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+								Context.Comm:SendTo(Plr, "Notify", { Text = payload.Message, Time = 15, From = `{payload.From} (Global)` })
+							end
+						end
+					end)
+				end)
+
+				if not success then
+					warn("[GlobalNotify] Failed to subscribe: " .. tostring(err))
+				end
+			end;
+		},
+		{
 			Name = "message";
-			Aliases = {"m"};
+			Aliases = {"m","msg"};
 			Rank = 1;
 			Category = "System";
 			Args = {
@@ -1360,6 +1404,50 @@ return function(Context)
 				for _,Plr in Args.Targets do
 					local filteredText = Context.Text:FilterFor(Args.Message,runningPlr.UserId,Plr.UserId)
 					Context.Comm:SendTo(Plr,"Message",{Text = filteredText,Time = 30,From = runningPlr.Name})
+				end
+			end;
+		},
+		{
+			Name = "globalmessage";
+			Aliases = {"gm","gmessage","gmsg"};
+			Rank = 1;
+			Category = "System";
+			Args = {
+				{
+					Name = "Message";
+					Type = "string";
+				}
+			};
+			Run = function(runningPlr,Args)
+					local messageData = {
+						From = runningPlr.Name,
+						Message = Context.Text:FilterFor(Args.Message,runningPlr.UserId,runningPlr.UserId),
+						UserId = runningPlr.UserId
+					}
+
+					local response = Context.Comm:Invoke(runningPlr,"Confirmation",{Text = `Confirm global message?\n\n {messageData.Message}`,Time = 15})
+					
+					if response == true then
+						game:GetService("MessagingService"):PublishAsync("GlobalMessage", messageData)
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification sent.`,Time = 10})
+					else
+						Context.Comm:SendTo(runningPlr,"Notify",{Text = `Global notification cancelled.`,Time = 10})
+					end
+			end;
+			Init = function()
+				local success, err = pcall(function()
+					game:GetService("MessagingService"):SubscribeAsync("GlobalMessage", function(data)
+						local payload = data.Data
+						if typeof(payload) == "table" and payload.Message and payload.From and payload.UserId then
+							for _, Plr in pairs(game:GetService("Players"):GetPlayers()) do
+								Context.Comm:SendTo(Plr, "Message", { Text = payload.Message, Time = 15, From = `{payload.From} (Global)` })
+							end
+						end
+					end)
+				end)
+
+				if not success then
+					warn("[GlobalMessage] Failed to subscribe: " .. tostring(err))
 				end
 			end;
 		},
@@ -1547,12 +1635,16 @@ return function(Context)
 			end
 		end
 	end
-	
+
 	function Commands:registerCommand(newCommand)
 		table.insert(Commands.Commands,newCommand)
 
 		if self:hasTag(newCommand,"Fun") and Context.Options.DisableFunCommands == true then
 			newCommand.Disabled = true
+		else
+			if newCommand.Init then
+				task.spawn(newCommand.Init)
+			end
 		end
 	end
 
@@ -1607,6 +1699,12 @@ return function(Context)
 		-- Disable fun commands
 		if Context.Options.DisableFunCommands then
 			Commands:disableTagged("Fun")
+		end
+		-- Init commands that need it
+		for _,Command in Commands.Commands do
+			if Command.Init then
+				task.spawn(Command.Init)
+			end
 		end
 	end
 

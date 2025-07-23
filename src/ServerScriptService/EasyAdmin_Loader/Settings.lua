@@ -30,6 +30,6 @@ return {
 	},
 	
 	DisableFunCommands = false,
-	DisableOwnerAdmin = true,
+	DisableOwnerAdmin = false,
 	EnableTextChatCommands = true,
 }
