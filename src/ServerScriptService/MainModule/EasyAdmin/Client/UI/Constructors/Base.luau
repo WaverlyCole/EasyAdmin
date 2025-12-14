@@ -89,8 +89,8 @@ return function(Context, Props)
     searchBar.Name = "SearchBar"
     searchBar.TextColor3 = Color3.new(1,1,1)
     searchBar.AnchorPoint = Vector2.new(0,.5)
-    searchBar.Position = UDim2.new(.01,0,.5,0)
-    searchBar.Size = UDim2.new(.5,0,.8,0)
+    searchBar.Position = UDim2.new(.02,0,.5,0)
+    searchBar.Size = UDim2.new(.5,0,.7,0)
     searchBar.FontFace.Weight = Enum.FontWeight.Bold
     searchBar.BackgroundTransparency = .9
     searchBar.Text = ""

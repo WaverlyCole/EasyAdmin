@@ -29,6 +29,41 @@ return function(Context)
 			end;
 		},
 		{
+			Name = "handto";
+			Aliases = {"givehand","hand"};
+			Rank = 1;
+			Category = "Character";
+			Args = {
+				{
+					Name = "Target";
+					Display = "Player";
+					Type = "player";
+				},
+			};
+			Run = function(runningPlr, Args)
+				local target = Args.Target
+				if not target then
+					Context.Comm:SendTo(runningPlr, "Notify", {Text = "No target provided!"})
+					return
+				end
+
+				local char = runningPlr.Character
+				if not char then return end
+
+				local tool = char:FindFirstChildWhichIsA("Tool")
+				if not tool then
+					Context.Comm:SendTo(runningPlr, "Notify", {Text = "You're not holding a tool."})
+					return
+				end
+
+				tool.Parent = target:WaitForChild("Backpack")
+
+				Context.Comm:SendTo(runningPlr, "Notify", {
+					Text = `Handed {tool.Name} to {target.Name}`
+				})
+			end;
+		},
+		{
 			Name = "doll";
 			Aliases = {"playerdoll"};
 			Rank = 1;
@@ -210,6 +245,70 @@ return function(Context)
 			end;
 		},
 		{
+			Name = "givesword";
+			Aliases = {"sword",};
+			Rank = 2;
+			Category = "Fun";
+			Args = {
+				{
+					Name = "Targets";
+					Display = "Player(s)";
+					Type = "players";
+				},
+			};
+			Run = function(runningPlr, Args)
+				local swordId = 125013769
+				local sword = game:GetService("InsertService"):LoadAsset(swordId)
+				local tool = sword:GetChildren()[1]
+
+				for i,v in Args.Targets do
+					pcall(function()
+					tool:Clone().Parent = v:WaitForChild("Backpack")
+					Context.Comm:SendTo(runningPlr, "Notify", {Text = `Gave {v.Name} a sword!`})
+					end)
+				end
+			end;
+		},
+		{
+			Name = "givegear";
+			Aliases = {"gear",};
+			Rank = 2;
+			Category = "Fun";
+			Args = {
+				{
+					Name = "Targets";
+					Display = "Player(s)";
+					Type = "players";
+				},
+				{
+					Name = "ID";
+					Display = "Gear ID";
+					Type = "number";
+				},
+			};
+			Run = function(runningPlr, Args)
+				if not Args.ID then
+					Context.Comm:SendTo(runningPlr, "Notify", {Text = "No gear ID provided!"})
+					return
+				end
+
+				local succ,err = pcall(function()
+					local sword = game:GetService("InsertService"):LoadAsset(Args.ID)
+					local tool = sword:GetChildren()[1]
+
+					for i,v in Args.Targets do
+						pcall(function()
+							tool:Clone().Parent = v:WaitForChild("Backpack")
+							Context.Comm:SendTo(runningPlr, "Notify", {Text = `Gave {v.Name} a {tool.Name}!`})
+						end)
+					end
+				end)
+				if not succ then
+					Context.Comm:SendTo(runningPlr, "Notify", {Text = `Unable to find/insert gear with ID {Args.ID}`})
+				end
+			end;
+		},
+		{
 			Name = "listplayers";
 			Aliases = {"lplayers","players","plrs"};
 			Rank = 1;
@@ -265,7 +364,7 @@ return function(Context)
 		},
 		{
 			Name = "viewtools";
-			Aliases = {"seetools"};
+			Aliases = {"seetools","showtools"};
 			Rank = 1;
 			Category = "Util";
 			Args = {
@@ -306,11 +405,27 @@ return function(Context)
 					local backpackRemoved = Player.Backpack.ChildRemoved:Connect(function()
 						showTools(Player)
 					end)
+
+					local charAdded = Player.CharacterAdded:Connect(function()
+						backpackAdded:Disconnect()
+						backpackRemoved:Disconnect()
+						
+						backpackAdded = Player.Backpack.ChildAdded:Connect(function()
+							showTools(Player)
+						end)
+						
+						backpackRemoved = Player.Backpack.ChildRemoved:Connect(function()
+							showTools(Player)
+						end)
+
+						showTools(Player)
+					end)
 					
 					local containerConn;containerConn = Context.Comm:Hook("ClosedContainer",function(Plr,Name)
 						if Name == `{Player.Name}'s Tools` then
 							backpackAdded:Disconnect()
 							backpackRemoved:Disconnect()
+							charAdded:Disconnect()
 							containerConn:Disconnect()
 						end
 					end)
