@@ -23,6 +23,7 @@ return function(Context, Props)
 
     local listLayout = Instance.new("UIListLayout")
     listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
     listLayout.Padding = UDim.new(0,4)
