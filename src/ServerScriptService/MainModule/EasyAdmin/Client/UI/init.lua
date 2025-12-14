@@ -241,13 +241,13 @@ return function(Context)
 		if Props.Time then
 			local endTime = time() + Props.Time
 			
-			local Conn;Conn = game:GetService("RunService").Stepped:Connect(function()
+			local Conn;Conn = game:GetService("RunService").Heartbeat:Connect(function()
 				if dismissed then
 					Conn:Disconnect()
 				end
 				local currTime = time()
 				local timeLeft = endTime - currTime
-				local percentCompleted = 1 - (currTime/endTime)
+				local percentCompleted = timeLeft / Props.Time
 				
 				newNotificaiton.Top.Time.Text = math.floor(timeLeft+1).."s"
 				newNotificaiton.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
@@ -289,7 +289,7 @@ return function(Context)
 				end
 				local currTime = time()
 				local timeLeft = endTime - currTime
-				local percentCompleted = 1 - (currTime/endTime)
+				local percentCompleted = timeLeft / Props.Time
 				
 				newNotificaiton.Top.Time.Text = math.floor(timeLeft+1).."s"
 				newNotificaiton.Top.Line.Progress.Size = UDim2.new(percentCompleted,0,1,0)
