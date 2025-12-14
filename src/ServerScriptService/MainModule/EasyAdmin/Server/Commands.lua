@@ -30,7 +30,7 @@ return function(Context)
 		},
 		{
 			Name = "handto";
-			Aliases = {"givehand","hand"};
+			Aliases = {"givetool"};
 			Rank = 1;
 			Category = "Character";
 			Args = {
