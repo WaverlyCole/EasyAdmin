@@ -31,7 +31,7 @@ return function(Context, Props)
     local Options = Instance.new("Frame")
     Options.Name = "Options"
     Options.BackgroundTransparency = 1
-    Options.Position = UDim2.fromScale(0,1.1)
+    Options.Position = UDim2.fromScale(0,1.02)
     Options.Size = UDim2.new(1,0,0,30)
     Options.Parent = newConfirmation
 
