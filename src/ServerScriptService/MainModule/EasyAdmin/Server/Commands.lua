@@ -42,10 +42,6 @@ return function(Context)
 			};
 			Run = function(runningPlr, Args)
 				local target = Args.Target
-				if not target then
-					Context.Comm:SendTo(runningPlr, "Notify", {Text = "No target provided!"})
-					return
-				end
 
 				local char = runningPlr.Character
 				if not char then return end
@@ -1682,6 +1678,10 @@ return function(Context)
 				table.insert(selectedPlayers,Player)
 			end
 
+			if #selectedPlayers == 0 then
+				return {}, false
+			end
+
 			if argType == "player" then
 				return selectedPlayers[1]
 			else
@@ -1734,9 +1734,10 @@ return function(Context)
 				return 0, false
 			end
 		elseif argType == "string" then
-			return table.concat(remainingArgs, " ")
+			local composedString = table.concat(remainingArgs, " ")
+			return composedString, composedString ~= ""
 		elseif argType == "shortstring" then
-			return argString
+			return argString, argString ~= nil
 		elseif argType == "time" then
 			local timeReturned,err = Context.Util:interpretTimeString(argString)
 			
@@ -1807,8 +1808,11 @@ return function(Context)
 						local argValue, argSuccess = self:processArg(Player,cmdArgs[i], Arg.Type, remainingArgs)
 												
 						if argSuccess == false then
-							if Arg.Default then
-								argValue = Arg.Default
+							if Arg.Optional or Arg.Default then
+								argValue = Arg.Default -- Set it to the default value if it's optional and a Default value is provided
+							else
+								Context.Comm:SendTo(Player,"Notify",{From = `Command Error`,Text = `Missing or invalid argument: {Arg.Name}({Arg.Type})`,Time = 10})
+								return
 							end
 						end
 						
