@@ -15,6 +15,7 @@ if IsServer then
 
 	Network._remote.OnServerInvoke = function(Player, hookName, ...)
 		local payload = {...}
+		if Debug then print(`Server recieved {hookName}`,payload) end
 
 		local succ,res = pcall(function()
 			if Network._hooks[hookName] then
@@ -38,6 +39,7 @@ elseif IsClient then
 
 	Network._remote.OnClientInvoke = function(hookName, ...)
 		local payload = {...}
+		if Debug then print(`Client recieved {hookName}`,payload) end
 
 		local succ,res = pcall(function()
 			if Network._hooks[hookName] then
